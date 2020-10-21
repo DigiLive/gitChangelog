@@ -79,18 +79,24 @@ $changelog->save('CHANGELOG.md');
 
 - Most settings can be changed directly by setting a public property.
   **(Setting a value of an invalid type, might result in unexpected results.)**
+
 - The From- and To tags, have to be set by calling a method, because they're validated.
+
 - Labels must be set by methods also to avoid overhead when adding the same label multiple times.
 
 ## Commit guidelines
 
 In order to suitable a good changelog, you should follow the following guidelines:
 
-- Commit messages must have a subject line and may have body copy.
-  These must be separated by a blank line.
+- Commit messages must have a subject line and may have body copy. These must be separated by a blank line.
+
 - The subject line must not exceed 50 characters.
+
 - The subject line should be capitalized and must not end in a period.
+
 - The subject line must be written in an imperative mood (Fix, not Fixed / Fixes etc.).
+
 - The body copy must be wrapped at 72 columns.
+
 - The body copy must only contain explanations as to what and why, never how. The latter belongs in documentation and
   implementation.
