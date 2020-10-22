@@ -28,6 +28,7 @@ new [issue](https://github.com/DigiLive/gitChangeLog/issues/new) is your concern
 
 ### Other
 
+- Set path to generate a changelog another local repository.
 - Set a From- and To tag to limit the changelog.
 - Filter subjects by labels<sup>1</sup>.
 - Set a header for the changelog (E.g. a title).

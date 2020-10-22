@@ -97,6 +97,10 @@ class GitChangeLog
      */
     public $formatHash = '{hash}';
     /**
+     * @var string Path to local git repository. Leave null for repository at current folder.
+     */
+    public $gitPath;
+    /**
      * @var string Value of the oldest tag to include into the generated changelog.
      * @see GitChangeLog::setFromTag()
      */
@@ -194,8 +198,11 @@ class GitChangeLog
             return $this->gitTags;
         }
 
+        $gitPath = '--git-dir ';
+        $gitPath .= $this->gitPath ?? './.git';
+
         // Get all git tags.
-        $this->gitTags = explode("\n", shell_exec("git tag --sort=-{$this->options['tagOrderBy']}"));
+        $this->gitTags = explode("\n", shell_exec("git $gitPath tag --sort=-{$this->options['tagOrderBy']}"));
         array_pop($this->gitTags); // Remove empty element.
 
         $toKey = $this->toTag == 'HEAD' ? 0 : array_search($this->toTag, $this->gitTags);
@@ -342,22 +349,25 @@ class GitChangeLog
             $gitTags[] = '';
         }
 
+        $gitPath = '--git-dir ';
+        $gitPath .= $this->gitPath ?? './.git';
+
         // Get tag dates and commit subjects from git log for each tag.
         foreach ($gitTags as $tag) {
             $tagRange            = $tag == '' ? $previousTag : "$tag...$previousTag";
             $includeMergeCommits = $this->options['includeMergeCommits'] ? '' : '--no-merges';
 
             $commitData[$previousTag]['date']     =
-                shell_exec("git log -1 --pretty=format:%ad --date=short $previousTag");
+                shell_exec("git $gitPath log -1 --pretty=format:%ad --date=short $previousTag");
             $commitData[$previousTag]['subjects'] =
                 explode(
                     "\n",
-                    shell_exec("git log $tagRange $includeMergeCommits --pretty=format:%s --reverse")
+                    shell_exec("git $gitPath log $tagRange $includeMergeCommits --pretty=format:%s --reverse")
                 );
             $commitData[$previousTag]['hashes']   =
                 explode(
                     "\n",
-                    shell_exec("git log $tagRange $includeMergeCommits --pretty=format:%h --reverse")
+                    shell_exec("git $gitPath log $tagRange $includeMergeCommits --pretty=format:%h --reverse")
                 );
             $previousTag                          = $tag;
         }
