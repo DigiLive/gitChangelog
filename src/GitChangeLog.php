@@ -143,6 +143,7 @@ class GitChangeLog
      *  noChangesMessage    Message to show when there are no commit subjects to list for a tag.
      *  addHashes           True includes commit hashes to the listed subjects.
      *  includeMergeCommits True includes merge commits in the subject lists.
+     *  tagOrderDesc        True to sort the tags in descending order.
      *  </pre>
      */
     protected $options = [
@@ -152,6 +153,7 @@ class GitChangeLog
         'noChangesMessage'    => 'No changes.',
         'addHashes'           => true,
         'includeMergeCommits' => false,
+        'tagOrderDesc'        => true,
     ];
 
     /**
@@ -233,16 +235,21 @@ class GitChangeLog
     {
         $logContent   = $this->options['logHeader'];
         $hashesString = '';
+        $commitData   = $this->fetchCommitData();
 
-        if (empty($this->fetchCommitData())) {
+        if (empty($commitData)) {
             $logContent      .= $this->options['noChangesMessage'];
             $this->changelog = $logContent . "\n";
 
             return;
         }
 
+        if (!$this->options['tagOrderDesc']) {
+            $commitData = array_reverse($commitData);
+        }
+
         // Build changelog.
-        foreach ($this->fetchCommitData() as $tag => &$data) {
+        foreach ($commitData as $tag => &$data) {
             // Add tag header and date.
             if ($tag == 'HEAD') {
                 $tag        = $this->options['headSubject'];
