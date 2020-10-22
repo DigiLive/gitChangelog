@@ -1,4 +1,5 @@
-<?php /** @noinspection PhpUnhandledExceptionInspection */
+<?php
+/** @noinspection PhpUnhandledExceptionInspection */
 
 /*
  * BSD 3-Clause License
@@ -384,5 +385,30 @@ class GitChangeLogTest extends TestCase
 
         $this->expectException('RunTimeException');
         $changeLog->save(vfsStream::url('testFolder/changelog.md'));
+    }
+
+    public function testSetOptions()
+    {
+        $changeLog = new GitChangeLog();
+
+        // Set multiple options at once.
+        $changeLog->setOptions([
+            'logHeader'   => 'Test1',
+            'headSubject' => 'Test2',
+        ]);
+        $this->assertEquals('Test1', $this->getPrivateProperty($changeLog, 'options')['logHeader']);
+        $this->assertEquals('Test2', $this->getPrivateProperty($changeLog, 'options')['headSubject']);
+
+        // Set single option.
+        $changeLog->setOptions('logHeader', 'Test');
+        $this->assertEquals('Test', $this->getPrivateProperty($changeLog, 'options')['logHeader']);
+    }
+
+    public function testSetOptionsThrowsException()
+    {
+        $changeLog = new GitChangeLog();
+
+        $this->expectException('InvalidArgumentException');
+        $changeLog->setOptions('NotExistingOption', 'Test');
     }
 }
