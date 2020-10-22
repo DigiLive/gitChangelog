@@ -267,13 +267,12 @@ class GitChangeLog
         // Build changelog.
         foreach ($commitData as $tag => &$data) {
             // Add tag header and date.
+            $tagData = [$tag, $data['date']];
             if ($tag == 'HEAD') {
-                $tag        = $this->options['headSubject'];
-                $logContent .= str_replace(['{tag}', '{date}'], [$tag, $this->options['nextTagDate']],
-                    $this->formatTag);
-            } else {
-                $logContent .= str_replace(['{tag}', '{date}'], [$tag, $data['date']], $this->formatTag);
+                $tagData = [$this->options['headSubject'], $this->options['nextTagDate']];
             }
+
+            $logContent .= str_replace(['{tag}', '{date}'], $tagData, $this->formatTag);
 
             // No subjects present for this tag.
             if (empty($data['subjects'])) {
