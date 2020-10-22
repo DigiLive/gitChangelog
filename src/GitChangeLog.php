@@ -147,9 +147,11 @@ class GitChangeLog
      *  noChangesMessage    Message to show when there are no commit subjects to list for a tag.
      *  addHashes           True includes commit hashes to the listed subjects.
      *  includeMergeCommits True includes merge commits in the subject lists.
+     *  tagOrderBy          Specify on which field the fetched tags have to be ordered.
      *  tagOrderDesc        True to sort the tags in descending order.
      *  commitOrder         Set to 'ASC' or 'DESC' to sort the subjects in resp. ascending/descending order.
      *  </pre>
+     * @see https://git-scm.com/docs/git-for-each-ref
      */
     protected $options = [
         'logHeader'           => "# Changelog\n\n",
@@ -158,6 +160,7 @@ class GitChangeLog
         'noChangesMessage'    => 'No changes.',
         'addHashes'           => true,
         'includeMergeCommits' => false,
+        'tagOrderBy'          => 'creatordate',
         'tagOrderDesc'        => true,
         'commitOrder'         => 'ASC',
     ];
@@ -192,7 +195,7 @@ class GitChangeLog
         }
 
         // Get all git tags.
-        $this->gitTags = explode("\n", shell_exec("git tag --sort=-creatordate"));
+        $this->gitTags = explode("\n", shell_exec("git tag --sort=-{$this->options['tagOrderBy']}"));
         array_pop($this->gitTags); // Remove empty element.
 
         $toKey = $this->toTag == 'HEAD' ? 0 : array_search($this->toTag, $this->gitTags);
