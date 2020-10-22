@@ -270,15 +270,15 @@ class GitChangeLogTest extends TestCase
         $method->setAccessible(true);
 
         $changeLog = new GitChangeLog();
-        $changeLog->setLabels();
+        $changeLog->setLabels('C', 'D');
 
-        $value = ['A' => ['date' => 'B', 'subjects' => ['C', 'D', 'C'], 'hashes' => ['E', 'F', 'G']]];
+        $value = ['A' => ['date' => 'B', 'subjects' => ['C', 'D', 'C', 'E'], 'hashes' => ['F', 'G', 'H', 'I']]];
         $this->setPrivateProperty($changeLog, 'commitData', $value);
         $value = [
             'A' => [
                 'date'     => 'B',
                 'subjects' => [1 => 'D', 2 => 'C'],
-                'hashes'   => [1 => ['F'], 2 => ['E', 'G']],
+                'hashes'   => [1 => ['G'], 2 => ['F', 'H']],
             ],
         ];
         $method->invokeArgs($changeLog, []);
