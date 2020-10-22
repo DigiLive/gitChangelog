@@ -69,7 +69,7 @@ class GitChangeLogTest extends TestCase
         $changelog = new GitChangeLog();
 
         $tags = $changelog->fetchTags();
-        $this->assertEquals('HEAD', end($tags));
+        $this->assertEquals('HEAD', reset($tags));
     }
 
     public function testFetchTagsUncached()
@@ -78,7 +78,7 @@ class GitChangeLogTest extends TestCase
         $changelog->setFromTag('HEAD');
 
         $tags = $changelog->fetchTags(true);
-        $this->assertEquals('HEAD', end($tags));
+        $this->assertEquals('HEAD', reset($tags));
     }
 
     public function testFetchTagsThrowsExceptionOnInvalidFromTag()
@@ -187,7 +187,7 @@ class GitChangeLogTest extends TestCase
     {
         $changeLog = new GitChangeLog();
 
-        $this->expectError();
+        $this->expectException('Error');
         $changeLog->setLabels(new stdClass());
     }
 
