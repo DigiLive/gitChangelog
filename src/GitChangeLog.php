@@ -148,6 +148,7 @@ class GitChangeLog
      *  addHashes           True includes commit hashes to the listed subjects.
      *  includeMergeCommits True includes merge commits in the subject lists.
      *  tagOrderDesc        True to sort the tags in descending order.
+     *  commitOrder         Set to 'ASC' or 'DESC' to sort the subjects in resp. ascending/descending order.
      *  </pre>
      */
     protected $options = [
@@ -158,6 +159,7 @@ class GitChangeLog
         'addHashes'           => true,
         'includeMergeCommits' => false,
         'tagOrderDesc'        => true,
+        'commitOrder'         => 'ASC',
     ];
 
     /**
@@ -269,6 +271,16 @@ class GitChangeLog
                 $logContent .= str_replace(['{subject}', '{hashes}'], [$subject, ''], $this->formatSubject);
                 $logContent .= "\n";
                 continue;
+            }
+
+            // Sort commit subjects.
+            switch ($this->options['commitOrder']) {
+                case 'ASC':
+                    natsort($data['subjects']);
+                    break;
+                case 'DESC':
+                    natsort($data['subjects']);
+                    $data['subjects'] = array_reverse($data['subjects'], true);
             }
 
             // Add commit subjects.

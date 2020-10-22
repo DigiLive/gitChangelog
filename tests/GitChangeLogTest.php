@@ -230,9 +230,10 @@ class GitChangeLogTest extends TestCase
         $changeLog->setFromTag('DoesNotExist');
     }
 
-    public function testBuild()
+    public function testBuildAscendingCommitOrder()
     {
         $changeLog      = new GitChangeLog();
+        $changeLog->setOptions('tagOrderDesc', false);
         $testValues     =
             [
                 // No tags.
@@ -254,6 +255,40 @@ class GitChangeLogTest extends TestCase
                 "# Changelog\n\n## A (B)\n\n* No changes.\n",
                 // Dummy tag and commits.
                 "# Changelog\n\n## A (B)\n\n* C (E, F)\n* D (G)\n",
+            ];
+
+        foreach ($testValues as $key => $value) {
+            $this->setPrivateProperty($changeLog, 'commitData', $value);
+            $changeLog->build();
+            $this->assertEquals($expectedValues[$key], $changeLog->get());
+        }
+    }
+
+    public function testBuildDescendingCommitOrder()
+    {
+        $changeLog      = new GitChangeLog();
+        $changeLog->setOptions('commitOrder', 'DESC');
+        $testValues     =
+            [
+                // No tags.
+                [],
+                // Head Revision included.
+                ['HEAD' => ['date' => 'B', 'subjects' => ['C', 'D'], 'hashes' => [['E'], ['F']]]],
+                // Dummy tag, no commits.
+                ['A' => ['date' => 'B', 'subjects' => [], 'hashes' => []]],
+                // Dummy tag and commits.
+                ['A' => ['date' => 'B', 'subjects' => ['C', 'D'], 'hashes' => [['E', 'F'], ['G']]]],
+            ];
+        $expectedValues =
+            [
+                //No tags
+                "# Changelog\n\nNo changes.\n",
+                // Head Revision included.
+                "# Changelog\n\n## Upcoming changes (Undetermined)\n\n* D (F)\n* C (E)\n",
+                // Dummy tag, no commits.
+                "# Changelog\n\n## A (B)\n\n* No changes.\n",
+                // Dummy tag and commits.
+                "# Changelog\n\n## A (B)\n\n* D (G)\n* C (E, F)\n",
             ];
 
         foreach ($testValues as $key => $value) {
