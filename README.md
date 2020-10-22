@@ -29,21 +29,22 @@ new [issue](https://github.com/DigiLive/gitChangeLog/issues/new) is your concern
 ### Other
 
 - Set a From- and To tag to limit the changelog.
-- Filter subjects by labels.
+- Filter subjects by labels<sup>1</sup>.
 - Set a header for the changelog (E.g. a title).
 - Set a custom subject for the HEAD revision.
 - Set a custom date for the HEAD revision (E.g. Next Tag/Release date).
 - Set a custom message to indicate there are no commits present.
 - In- or exclude merge commits.
+- Set an ordering key for sorting tags/releases<sup>2</sup>.
+- Set the sort order of tags/releases.
+- Set the sort order of subjects.
 - Define a custom format for Tag/Release lines.
 - Define a custom format for subject lines.
+- Define a custom format for singe hashes.
 - Define a custom format for hash lines.
 
-### Planned
-
-- Allow sorting tags by other keys than creator date.
-- Allow sorting subjects by labels.
-- Set sort order of tags and subjects.
+1. A label is considered to be the first word of a commit subject.
+2. Using an invalid key will result in unlisted changes or when enabled, just the changes of the HEAD revision.
 
 ## Installation
 
