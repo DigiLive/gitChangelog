@@ -93,6 +93,10 @@ class GitChangeLog
      */
     public $baseFile;
     /**
+     * @var string Format of a single commit hash. {hash} is replaced by the commit hash.
+     */
+    public $formatHash = '{hash}';
+    /**
      * @var string Value of the oldest tag to include into the generated changelog.
      * @see GitChangeLog::setFromTag()
      */
@@ -270,6 +274,10 @@ class GitChangeLog
             // Add commit subjects.
             foreach ($data['subjects'] as $subjectKey => &$subject) {
                 if ($this->options['addHashes']) {
+                    foreach ($data['hashes'][$subjectKey] as &$hash) {
+                        $hash = str_replace('{hash}', $hash, $this->formatHash);
+                    }
+                    unset($hash);
                     $hashesString = implode(', ', $data['hashes'][$subjectKey]);
                     $hashesString = str_replace('{hashes}', $hashesString, $this->formatHashes);
                 }
