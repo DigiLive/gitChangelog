@@ -75,31 +75,6 @@ use RuntimeException;
 class GitChangeLog
 {
     /**
-     * @var string First string of the generated changelog.
-     */
-    public $logHeader = "# Changelog\n\n";
-    /**
-     * @var string Subject of the HEAD revision (Implies unreleased commits).
-     */
-    public $headSubject = 'Upcoming changes';
-    /**
-     * @var string Date at head subject (Implies date of next release).
-     * @see GitChangeLog::$headSubject
-     */
-    public $nextTagDate = 'Undetermined';
-    /**
-     * @var string Message to show when there are no commit subjects to list for a tag.
-     */
-    public $noChangesMessage = "No changes.";
-    /**
-     * @var bool True includes commit hashes to the listed subjects.
-     */
-    public $addHashes = true;
-    /**
-     * @var bool True includes merge commits in the subject lists.
-     */
-    public $includeMergeCommits = false;
-    /**
      * @var string Format of tag strings. {tag} is replaced by the tags found in the git log, {date} is replaced by the
      *             corresponding tag date.
      */
@@ -155,9 +130,29 @@ class GitChangeLog
 //        'Document',     // Refactor of documentation, e.g. help files.
     ];
     /**
-     * @var array
+     * @var array Contains the (processed) information which is fetched from the git repository.
      */
     protected $commitData;
+    /**
+     * @var array Contains the user options used by the class.
+     *
+     *  <pre>
+     *  logHeader           First string of the generated changelog.
+     *  headSubject         Subject of the HEAD revision (Implies unreleased commits).
+     *  nextTagDate         Date at head subject (Implies date of next release).
+     *  noChangesMessage    Message to show when there are no commit subjects to list for a tag.
+     *  addHashes           True includes commit hashes to the listed subjects.
+     *  includeMergeCommits True includes merge commits in the subject lists.
+     *  </pre>
+     */
+    protected $options = [
+        'logHeader'           => "# Changelog\n\n",
+        'headSubject'         => 'Upcoming changes',
+        'nextTagDate'         => 'Undetermined',
+        'noChangesMessage'    => 'No changes.',
+        'addHashes'           => true,
+        'includeMergeCommits' => false,
+    ];
 
     /**
      * GitChangeLog constructor.
@@ -236,11 +231,11 @@ class GitChangeLog
      */
     public function build(): void
     {
-        $logContent   = $this->logHeader;
+        $logContent   = $this->options['logHeader'];
         $hashesString = '';
 
         if (empty($this->fetchCommitData())) {
-            $logContent      .= $this->noChangesMessage;
+            $logContent      .= $this->options['noChangesMessage'];
             $this->changelog = $logContent . "\n";
 
             return;
@@ -250,15 +245,16 @@ class GitChangeLog
         foreach ($this->fetchCommitData() as $tag => &$data) {
             // Add tag header and date.
             if ($tag == 'HEAD') {
-                $tag        = $this->headSubject;
-                $logContent .= str_replace(['{tag}', '{date}'], [$tag, $this->nextTagDate], $this->formatTag);
+                $tag        = $this->options['headSubject'];
+                $logContent .= str_replace(['{tag}', '{date}'], [$tag, $this->options['nextTagDate']],
+                    $this->formatTag);
             } else {
                 $logContent .= str_replace(['{tag}', '{date}'], [$tag, $data['date']], $this->formatTag);
             }
 
             // No subjects present for this tag.
             if (empty($data['subjects'])) {
-                $subject    = $this->noChangesMessage;
+                $subject    = $this->options['noChangesMessage'];
                 $logContent .= str_replace(['{subject}', '{hashes}'], [$subject, ''], $this->formatSubject);
                 $logContent .= "\n";
                 continue;
@@ -266,7 +262,7 @@ class GitChangeLog
 
             // Add commit subjects.
             foreach ($data['subjects'] as $subjectKey => &$subject) {
-                if ($this->addHashes) {
+                if ($this->options['addHashes']) {
                     $hashesString = implode(', ', $data['hashes'][$subjectKey]);
                     $hashesString = str_replace('{hashes}', $hashesString, $this->formatHashes);
                 }
@@ -281,16 +277,14 @@ class GitChangeLog
     /**
      * Fetch the commit data from the git repository.
      *
-     * Commit data is constructed as follows after it is processed:
+     * Commit data is formatted as follows after it is processed:
      *
      * [
      *     Tag => [
-     *         'date'     => string,
-     *         'subjects' => [],
-     *         'hashes'   => []
+     *         'date'           => string,
+     *         'uniqueSubjects' => [],
+     *         'hashes'         => []
      * ]
-     *
-     * Subjects and hashes which belong to each other, have the same array key.
      *
      * Note:
      * Re-calling this method will not overwrite the commit data which was retrieved at an earlier call.
@@ -321,7 +315,7 @@ class GitChangeLog
         // Get tag dates and commit subjects from git log for each tag.
         foreach ($gitTags as $tag) {
             $tagRange            = $tag == '' ? $previousTag : "$tag...$previousTag";
-            $includeMergeCommits = $this->includeMergeCommits ? '' : '--no-merges';
+            $includeMergeCommits = $this->options['includeMergeCommits'] ? '' : '--no-merges';
 
             $commitData[$previousTag]['date']     =
                 shell_exec("git log -1 --pretty=format:%ad --date=short $previousTag");
@@ -366,6 +360,7 @@ class GitChangeLog
                 $duplicates = array_keys($data['subjects'], $subject);
                 $hashes     = [];
 
+                // Subjects and hashes which belong to each other, have the same array key.
                 foreach ($duplicates as $key => $index) {
                     // Collect hashes.
                     if (!is_array($data['hashes'][$index])) {
@@ -580,5 +575,33 @@ class GitChangeLog
         }
 
         $this->labels = array_unique($this->labels);
+    }
+
+    /**
+     * Set one or multiple options.
+     *
+     * A single option can be set by passing the option name and value as arguments.
+     * Alternatively you can set multiple options at once by passing a single argument as an array with option names
+     * and values.
+     *
+     * @param   mixed  $name   Name of option or array of option names and values.
+     * @param   mixed  $value  [Optional] Value of option.
+     *
+     * @throws InvalidArgumentException If the option you're trying to set is invalid.
+     * @see GitChangeLog::$options
+     */
+    public function setOptions($name, $value = null)
+    {
+        if (!is_array($name)) {
+            $name = [$name => $value];
+        }
+
+        foreach ($name as $option => $value) {
+            if (!array_key_exists($option, $this->options)) {
+                throw new InvalidArgumentException('Attempt to set an invalid option!');
+            }
+
+            $this->options[$option] = $value;
+        }
     }
 }
