@@ -404,7 +404,7 @@ class GitChangeLog
 
                 // Add hashes of duplicate subjects to the current subject and remove this duplicates.
                 // Subjects and hashes which belong to each other, have the same array key.
-                foreach ($duplicates as $key => $index) {
+                foreach ($duplicates as $index) {
                     $data['hashes'][$subjectKey][] = $data['hashes'][$index];
                     unset($data['subjects'][$index], $data['hashes'][$index]);
                 }
