@@ -361,12 +361,12 @@ class GitChangeLog
             $commitData[$previousTag]['subjects'] =
                 explode(
                     "\n",
-                    shell_exec("git $gitPath log $tagRange $includeMergeCommits --pretty=format:%s --reverse")
+                    shell_exec("git $gitPath log $tagRange $includeMergeCommits --pretty=format:%s")
                 );
             $commitData[$previousTag]['hashes']   =
                 explode(
                     "\n",
-                    shell_exec("git $gitPath log $tagRange $includeMergeCommits --pretty=format:%h --reverse")
+                    shell_exec("git $gitPath log $tagRange $includeMergeCommits --pretty=format:%h")
                 );
             $previousTag                          = $tag;
         }
@@ -393,28 +393,20 @@ class GitChangeLog
     private function processCommitData(): void
     {
         foreach ($this->commitData as $tag => &$data) {
-            // Remove duplicates per tag.
-            foreach ($data['subjects'] as $subjectKey => $subject) {
-                // Get indexes of current subject.
-                $duplicates = array_keys($data['subjects'], $subject);
-                $hashes     = [];
+            // Merge duplicate subjects per tag.
+            foreach ($data['subjects'] as $subjectKey => &$subject) {
+                // Convert hash element into an array.
+                $data['hashes'][$subjectKey] = [$data['hashes'][$subjectKey]];
 
+                // Get indexes of all other elements with the same subject as the current one.
+                $duplicates = array_keys($data['subjects'], $subject);
+                array_shift($duplicates);
+
+                // Add hashes of duplicate subjects to the current subject and remove this duplicates.
                 // Subjects and hashes which belong to each other, have the same array key.
                 foreach ($duplicates as $key => $index) {
-                    // Collect hashes.
-                    if (!is_array($data['hashes'][$index])) {
-                        $hashes[] = $data['hashes'][$index];
-                    } else {
-                        $hashes = $data['hashes'][$index];
-                    }
-
-                    $data['hashes'][$index] = $hashes;
-
-                    // Remove all but last duplicate.
-                    end($duplicates);
-                    if ($key !== key($duplicates)) {
-                        unset($data['subjects'][$index], $data['hashes'][$index]);
-                    }
+                    $data['hashes'][$subjectKey][] = $data['hashes'][$index];
+                    unset($data['subjects'][$index], $data['hashes'][$index]);
                 }
 
                 // Remove subjects and hashes without specified labels.

@@ -232,7 +232,7 @@ class GitChangeLogTest extends TestCase
 
     public function testBuildAscendingCommitOrder()
     {
-        $changeLog      = new GitChangeLog();
+        $changeLog = new GitChangeLog();
         $changeLog->setOptions('tagOrderDesc', false);
         $testValues     =
             [
@@ -266,7 +266,7 @@ class GitChangeLogTest extends TestCase
 
     public function testBuildDescendingCommitOrder()
     {
-        $changeLog      = new GitChangeLog();
+        $changeLog = new GitChangeLog();
         $changeLog->setOptions('commitOrder', 'DESC');
         $testValues     =
             [
@@ -305,20 +305,26 @@ class GitChangeLogTest extends TestCase
         $method->setAccessible(true);
 
         $changeLog = new GitChangeLog();
-        $changeLog->setLabels('C', 'D');
+        $changeLog->setLabels('C', 'D', 'F');
 
-        $value = ['A' => ['date' => 'B', 'subjects' => ['C', 'D', 'C', 'E'], 'hashes' => ['F', 'G', 'H', 'I']]];
-        $this->setPrivateProperty($changeLog, 'commitData', $value);
-        $value = [
+        $commitData = [
             'A' => [
                 'date'     => 'B',
-                'subjects' => [1 => 'D', 2 => 'C'],
-                'hashes'   => [1 => ['G'], 2 => ['F', 'H']],
+                'subjects' => [0 => 'C', 1 => 'D', 2 => 'C', 3 => 'E', 4 => 'F'],
+                'hashes'   => [0 => 'G', 1 => 'H', 2 => 'I', 3 => 'J', 4 => 'K'],
+            ],
+        ];
+        $this->setPrivateProperty($changeLog, 'commitData', $commitData);
+        $commitData = [
+            'A' => [
+                'date'     => 'B',
+                'subjects' => [0 => 'C', 1 => 'D', 4 => 'F'],
+                'hashes'   => [0 => ['G', 'I'], 1 => ['H'], 4 => ['K']],
             ],
         ];
         $method->invokeArgs($changeLog, []);
 
-        $this->assertEquals($value, $this->getPrivateProperty($changeLog, 'commitData'));
+        $this->assertEquals($commitData, $this->getPrivateProperty($changeLog, 'commitData'));
     }
 
     public function testAddLabel()
