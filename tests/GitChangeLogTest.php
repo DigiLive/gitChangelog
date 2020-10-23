@@ -58,16 +58,6 @@ class GitChangeLogTest extends TestCase
         vfsStream::setup('testFolder', null, ['baseLog.md' => 'Base Log Content']);
     }
 
-    public function testArrayStrPos0()
-    {
-        $this->assertTrue(GitChangeLog::arrayStrPos0('Hello World', 'Hello'));
-        $this->assertTrue(GitChangeLog::arrayStrPos0('Hello World', 'hello'));
-        $this->assertTrue(GitChangeLog::arrayStrPos0('Hello World', ['World', 'Hello']));
-
-        $this->assertFalse(GitChangeLog::arrayStrPos0('Hello World', 'World'));
-        $this->assertFalse(GitChangeLog::arrayStrPos0('Hello World', 'Hello', 1));
-    }
-
     public function testFetchTagsCached()
     {
         $changelog = new GitChangeLog();
@@ -436,10 +426,12 @@ class GitChangeLogTest extends TestCase
         $changeLog = new GitChangeLog();
 
         // Set multiple options at once.
-        $changeLog->setOptions([
-            'logHeader'   => 'Test1',
-            'headSubject' => 'Test2',
-        ]);
+        $changeLog->setOptions(
+            [
+                'logHeader'   => 'Test1',
+                'headSubject' => 'Test2',
+            ]
+        );
         $this->assertEquals('Test1', $this->getPrivateProperty($changeLog, 'options')['logHeader']);
         $this->assertEquals('Test2', $this->getPrivateProperty($changeLog, 'options')['headSubject']);
 
