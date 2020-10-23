@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * BSD 3-Clause License
  *
@@ -250,11 +252,10 @@ class GitChangeLog
      */
     public function build(): void
     {
-        $logContent   = $this->options['logHeader'];
-        $hashesString = '';
-        $commitData   = $this->fetchCommitData();
+        $logContent = $this->options['logHeader'];
+        $commitData = $this->fetchCommitData();
 
-        if (empty($commitData)) {
+        if (!$commitData) {
             $logContent      .= $this->options['noChangesMessage'];
             $this->changelog = $logContent . "\n";
 
@@ -276,7 +277,7 @@ class GitChangeLog
             $logContent .= str_replace(['{tag}', '{date}'], $tagData, $this->formatTag);
 
             // No subjects present for this tag.
-            if (empty($data['subjects'])) {
+            if (!$data['subjects']) {
                 $subject    = $this->options['noChangesMessage'];
                 $logContent .= str_replace(['{subject}', '{hashes}'], [$subject, ''], $this->formatSubject);
                 $logContent .= "\n";
@@ -284,26 +285,15 @@ class GitChangeLog
             }
 
             // Sort commit subjects.
-            switch ($this->options['commitOrder']) {
-                case 'ASC':
-                    natsort($data['subjects']);
-                    break;
-                case 'DESC':
-                    natsort($data['subjects']);
-                    $data['subjects'] = array_reverse($data['subjects'], true);
-            }
+            $this->natSort($data['subjects'], $this->options['commitOrder']);
 
             // Add commit subjects.
             foreach ($data['subjects'] as $subjectKey => &$subject) {
-                if ($this->options['addHashes']) {
-                    foreach ($data['hashes'][$subjectKey] as &$hash) {
-                        $hash = str_replace('{hash}', $hash, $this->formatHash);
-                    }
-                    unset($hash);
-                    $hashesString = implode(', ', $data['hashes'][$subjectKey]);
-                    $hashesString = str_replace('{hashes}', $hashesString, $this->formatHashes);
-                }
-                $logContent .= str_replace(['{subject}', '{hashes}'], [$subject, $hashesString], $this->formatSubject);
+                $logContent .= str_replace(
+                    ['{subject}', '{hashes}'],
+                    [$subject, $this->formatHashes($data['hashes'][$subjectKey])],
+                    $this->formatSubject
+                );
             }
             $logContent .= "\n";
         }
@@ -362,12 +352,12 @@ class GitChangeLog
             $commitData[$previousTag]['subjects'] =
                 explode(
                     "\n",
-                    shell_exec("git $gitPath log $tagRange $includeMergeCommits --pretty=format:%s")
+                    shell_exec("git $gitPath log $tagRange $includeMergeCommits --pretty=format:%s") ?? ''
                 );
             $commitData[$previousTag]['hashes']   =
                 explode(
                     "\n",
-                    shell_exec("git $gitPath log $tagRange $includeMergeCommits --pretty=format:%h")
+                    shell_exec("git $gitPath log $tagRange $includeMergeCommits --pretty=format:%h") ?? ''
                 );
             $previousTag                          = $tag;
         }
@@ -448,6 +438,55 @@ class GitChangeLog
         }
 
         return false;
+    }
+
+    /**
+     * Sort an array using a “natural order” algorithm.
+     *
+     * The sorting order can be defined as  'ASC' or 'DESC'.
+     * For any other value, the array will remain unchanged.
+     *
+     * @param   array   $array  The input array.
+     * @param   string  $order  Sorting order.
+     */
+    protected function natSort(array &$array, string $order): void
+    {
+        switch ($order) {
+            case 'ASC':
+                natsort($array);
+                break;
+            case 'DESC':
+                natsort($array);
+                $array = array_reverse($array, true);
+        }
+    }
+
+    /**
+     * Format the hashes of a commit subject into a string.
+     *
+     * Each hash is formatted as defined by property formatHash.
+     * After formatting, all hashes are concatenated to a single line, comma separated.
+     * Finally this line is formatted as defined by property formatHashes.
+     *
+     * @param   array  $hashes  Hashes to format
+     *
+     * @return string Formatted hash string.
+     * @see GitChangeLog::$formatHash
+     * @see GitChangeLog::$formatHashes
+     */
+    protected function formatHashes(array $hashes): string
+    {
+        if (!$this->options['addHashes']) {
+            return '';
+        }
+
+        foreach ($hashes as &$hash) {
+            $hash = str_replace('{hash}', $hash, $this->formatHash);
+        }
+        unset($hash);
+        $hashes = implode(', ', $hashes);
+
+        return str_replace('{hashes}', $hashes, $this->formatHashes);
     }
 
     /**

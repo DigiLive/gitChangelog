@@ -2,6 +2,8 @@
 
 /** @noinspection PhpUnhandledExceptionInspection */
 
+declare(strict_types=1);
+
 /*
  * BSD 3-Clause License
  *
