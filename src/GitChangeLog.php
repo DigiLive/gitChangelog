@@ -206,41 +206,21 @@ class GitChangeLog
 
         // Get all git tags.
         $this->gitTags = explode("\n", shell_exec("git $gitPath tag --sort=-{$this->options['tagOrderBy']}"));
-        array_pop($this->gitTags); // Remove empty element.
-
-        $toKey = $this->toTag == 'HEAD' ? 0 : array_search($this->toTag, $this->gitTags);
-        if ($toKey === false) {
-            throw new Exception('To tag does not exist!');
-        }
-
-        if ($this->fromTag === null) {
-            // Cache requested git tags. $this->gitTags = [newest..oldest].
-            $this->gitTags = array_slice($this->gitTags, $toKey);
-
-            // Add HEAD revision as tag.
-            if ($this->toTag == 'HEAD') {
-                array_unshift($this->gitTags, 'HEAD');
-            }
-
-            return $this->gitTags;
-        }
-
+        array_pop($this->gitTags); // Remove empty trailing element.
         // Add HEAD revision as tag.
         if ($this->toTag == 'HEAD') {
             array_unshift($this->gitTags, 'HEAD');
         }
 
-        $fromKey = array_search($this->fromTag, $this->gitTags);
-
-        if ($fromKey === false) {
-            throw new Exception('From tag does not exist!');
-        }
+        $toKey  = $this->toTag == 'HEAD' ? 0 : Utilities::arraySearch($this->toTag, $this->gitTags);
+        $length = $this->fromTag === null ? null : Utilities::arraySearch($this->fromTag, $this->gitTags) - $toKey + 1;
 
         // Cache requested git tags. $this->gitTags = [newest..oldest].
-        $this->gitTags = array_slice($this->gitTags, $toKey, $fromKey - $toKey + 1);
+        $this->gitTags = array_slice($this->gitTags, $toKey, $length);
 
         return $this->gitTags;
     }
+
 
     /**
      * Generate the changelog.
@@ -340,12 +320,12 @@ class GitChangeLog
         }
 
         $gitPath = '--git-dir ';
-        $gitPath .= $this->gitPath ?? './.git';
+        $gitPath .= ($this->gitPath ?? './') . '.git';
 
         // Get tag dates and commit subjects from git log for each tag.
+        $includeMergeCommits = $this->options['includeMergeCommits'] ? '' : '--no-merges';
         foreach ($gitTags as $tag) {
-            $tagRange            = $tag == '' ? $previousTag : "$tag...$previousTag";
-            $includeMergeCommits = $this->options['includeMergeCommits'] ? '' : '--no-merges';
+            $tagRange = $tag == '' ? $previousTag : "$tag...$previousTag";
 
             $commitData[$previousTag]['date']     =
                 shell_exec("git $gitPath log -1 --pretty=format:%ad --date=short $previousTag");
@@ -401,7 +381,7 @@ class GitChangeLog
                 }
 
                 // Remove subjects and hashes without specified labels.
-                if (!empty($this->labels) && Utilities::arrayStrPos0($subject, $this->labels) === false) {
+                if ($this->labels && Utilities::arrayStrPos0($subject, $this->labels) === false) {
                     unset(
                         $this->commitData[$tag]['subjects'][$subjectKey],
                         $this->commitData[$tag]['hashes'][$subjectKey]
@@ -504,11 +484,7 @@ class GitChangeLog
     public function setToTag($tag = null)
     {
         $tag = $tag ?? 'HEAD';
-
-        if (!in_array($tag, $this->gitTags)) {
-            throw new InvalidArgumentException('To tag does not exist!');
-        }
-
+        Utilities::arraySearch($tag, $this->gitTags);
         $this->toTag = $tag;
     }
 
@@ -523,8 +499,8 @@ class GitChangeLog
      */
     public function setFromTag($tag = null)
     {
-        if ($tag !== null && !in_array($tag, $this->gitTags)) {
-            throw new InvalidArgumentException('From tag does not exist!');
+        if ($tag !== null) {
+            Utilities::arraySearch($tag, $this->gitTags);
         }
 
         $this->fromTag = $tag;
@@ -544,8 +520,11 @@ class GitChangeLog
     public function removeLabel(string ...$labels): void
     {
         foreach ($labels as $label) {
-            if (($key = array_search($label, $this->labels)) !== false) {
+            try {
+                $key = Utilities::arraySearch($label, $this->labels);
                 unset($this->labels[$key]);
+            } catch (InvalidArgumentException $e) {
+                continue;
             }
         }
         $this->labels = array_values($this->labels);

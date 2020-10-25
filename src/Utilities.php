@@ -37,6 +37,15 @@ declare(strict_types=1);
 
 namespace DigiLive\GitChangeLog;
 
+use InvalidArgumentException;
+
+/**
+ * Class Utilities
+ *
+ * This class contains supportive methods to help keeping the complexity of calling code low.
+ *
+ * @package DigiLive\GitChangeLog
+ */
 class Utilities
 {
     /**
@@ -87,5 +96,15 @@ class Utilities
         }
 
         return false;
+    }
+
+    public static function arraySearch($value, $array): int
+    {
+        $key = array_search($value, $array);
+        if ($key === false) {
+            throw new InvalidArgumentException("'$value' does not exist in array!");
+        }
+
+        return $key;
     }
 }
