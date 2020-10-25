@@ -2,6 +2,11 @@
 
 ## Next Release (Soon)
 
+* Fix get method ([a9a9804](https://github.com/DigiLive/gitChangelog/commit/a9a9804))
+* Optimize save method ([d0b1a07](https://github.com/DigiLive/gitChangelog/commit/d0b1a07))
+
+## v0.2.0 (2020-10-23)
+
 * Add Option to sort the changelog by tags in ascending/descending order ([5f6473d](https://github.com/DigiLive/gitChangelog/commit/5f6473d))
 * Add PHPUnit tests for GitChangelog::setOptions() ([94b1301](https://github.com/DigiLive/gitChangelog/commit/94b1301))
 * Add formatting of a single hash ([392db51](https://github.com/DigiLive/gitChangelog/commit/392db51))
