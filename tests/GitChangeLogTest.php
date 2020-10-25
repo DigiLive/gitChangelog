@@ -47,6 +47,15 @@ use ReflectionClass;
 use ReflectionException;
 use stdClass;
 
+/**
+ * Class GitChangeLogTest
+ *
+ * PHPUnit tests of class GitChangeLog.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ *
+ * @package DigiLive\GitChangeLog\Tests
+ */
 class GitChangeLogTest extends TestCase
 {
 

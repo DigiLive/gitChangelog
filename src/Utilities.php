@@ -101,6 +101,8 @@ class Utilities
     /**
      * Searches the array for a given value and returns the corresponding key if successful.
      *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+     *
      * @param   mixed  $value   The searched value.
      *                          If needle is a string, the comparison is done in a case-sensitive manner.
      * @param   array  $array   The array.

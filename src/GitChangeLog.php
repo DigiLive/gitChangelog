@@ -189,6 +189,8 @@ class GitChangeLog
      * Re-calling this method will not overwrite the tags which where retrieved at an earlier call.
      * To force a refresh, set the parameter to true.
      *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+     *
      * @param   bool  $force  [Optional] Set to true to refresh the cached tags.
      *
      * @return array The cached tags.
@@ -296,6 +298,8 @@ class GitChangeLog
      * Note:
      * Re-calling this method will not overwrite the commit data which was retrieved at an earlier call.
      * To force a refresh, set the parameter to true.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      *
      * @param   false  $force  [Optional] Set to true to refresh the cached tags.
      *
@@ -428,6 +432,8 @@ class GitChangeLog
      * Note:
      * This method will raise a warning when a base file is defined, but can not be read.
      *
+     * @SuppressWarnings(PHPMD.ErrorControlOperator)
+     *
      * @param   string  $filePath  Path to file to save the changelog.
      *
      * @throws RuntimeException When writing of the file fails.
@@ -450,10 +456,12 @@ class GitChangeLog
      *
      * Optionally the changelog can prepend the content of a base file.
      *
-     * @param   bool  $prepend  [Optional] Set to true to prepend the changelog to a base file.
-     *
      * Note:
      * This method will raise a warning when the base file, but can not be read.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+     *
+     * @param   bool  $prepend  [Optional] Set to true to prepend the changelog to a base file.
      *
      * @return string The generated changelog, optionally followed by the content of a base file.
      * @see GitChangeLog::$baseFile
