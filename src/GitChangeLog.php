@@ -461,7 +461,7 @@ class GitChangeLog
     public function get(bool $prepend = false): string
     {
         $baseContent = '';
-        if ($prepend) {
+        if ($prepend && $this->baseFile !== null) {
             $baseContent = file_get_contents($this->baseFile);
         }
 
