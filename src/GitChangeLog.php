@@ -435,10 +435,6 @@ class GitChangeLog
      */
     public function save(string $filePath): void
     {
-        if (!is_writable(dirname($filePath))) {
-            throw new RuntimeException('Unable to write to file!');
-        }
-
         $baseContent = '';
         if ($this->baseFile !== null) {
             $baseContent = file_get_contents($this->baseFile);
