@@ -98,9 +98,24 @@ class Utilities
         return false;
     }
 
-    public static function arraySearch($value, $array): int
+    /**
+     * Searches the array for a given value and returns the corresponding key if successful.
+     *
+     * @param   mixed  $value   The searched value.
+     *                          If needle is a string, the comparison is done in a case-sensitive manner.
+     * @param   array  $array   The array.
+     * @param   bool   $strict  [optional] If the third parameter strict is set to true then the array_search
+     *                          function will also check the types of the needle in the haystack.
+     *
+     * @return int The key for needle if it is found in the array, false otherwise.
+     *             If needle is found in haystack more than once, the first matching key is returned.
+     *             To return the keys for all matching values, use array_keys with the optional search_value parameter
+     *             instead.
+     * @throws InvalidArgumentException If the value is not found in array.
+     */
+    public static function arraySearch($value, array $array, bool $strict = false): int
     {
-        $key = array_search($value, $array);
+        $key = array_search($value, $array, $strict);
         if ($key === false) {
             throw new InvalidArgumentException("'$value' does not exist in array!");
         }
