@@ -38,7 +38,7 @@
     </include>
   </coverage>
   <testsuites>
-    <testsuite name="GitChangeLog">
+    <testsuite name="GitChangelog">
       <directory>tests</directory>
     </testsuite>
   </testsuites>

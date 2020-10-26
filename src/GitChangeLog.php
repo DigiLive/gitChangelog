@@ -35,14 +35,14 @@ declare(strict_types=1);
  *
  */
 
-namespace DigiLive\GitChangeLog;
+namespace DigiLive\GitChangelog;
 
 use Exception;
 use InvalidArgumentException;
 use RuntimeException;
 
 /**
- * Class GitChangeLog
+ * Class GitChangelog
  *
  * Automatically generate a changelog build from git commits.
  * The log includes tags and their date, followed by the subject of each commit which belongs to that tag.
@@ -73,9 +73,9 @@ use RuntimeException;
  *
  * Subject lines must never contain (and / or start with) anything else.
  *
- * @package DigiLive\GitChangeLog
+ * @package DigiLive\GitChangelog
  */
-class GitChangeLog
+class GitChangelog
 {
     /**
      * @var string Format of tag strings. {tag} is replaced by the tags found in the git log, {date} is replaced by the
@@ -105,22 +105,22 @@ class GitChangeLog
     public $gitPath;
     /**
      * @var string Value of the oldest tag to include into the generated changelog.
-     * @see GitChangeLog::setFromTag()
+     * @see GitChangelog::setFromTag()
      */
     protected $fromTag;
     /**
      * @var string Value of the newest tag to include into the generated changelog.
-     * @see GitChangeLog::setToTag()
+     * @see GitChangelog::setToTag()
      */
     protected $toTag = 'HEAD';
     /**
      * @var array Contains the tags which exist in the git repository.
-     * @see GitChangeLog::fetchTags();
+     * @see GitChangelog::fetchTags();
      */
     protected $gitTags;
     /**
      * @var string The generated changelog.
-     * @see GitChangeLog::build()
+     * @see GitChangelog::build()
      */
     protected $changelog;
     /**
@@ -173,7 +173,7 @@ class GitChangeLog
     ];
 
     /**
-     * GitChangeLog constructor.
+     * GitChangelog constructor.
      *
      * @throws Exception When the defined From- or To-tag doesn't exist in the git repository.
      */
@@ -230,7 +230,7 @@ class GitChangeLog
      * The generated changelog will be stored into a class property.
      *
      * @throws Exception When the defined From- or To-tag doesn't exist in the git repository.
-     * @see GitChangeLog::changelog
+     * @see GitChangelog::changelog
      */
     public function build(): void
     {
@@ -305,7 +305,7 @@ class GitChangeLog
      *
      * @return array    Commit data.
      * @throws Exception When the defined From- or To-tag doesn't exist in the git repository.
-     * @see GitChangeLog::processCommitData()
+     * @see GitChangelog::processCommitData()
      */
     public function fetchCommitData($force = false): array
     {
@@ -362,8 +362,8 @@ class GitChangeLog
      * - Commit subjects which do not start with any of the defined labels are removed from the data also, unless no
      *   labels are defined at all.
      *
-     * @see GitChangeLog::fetchCommitData()
-     * @see GitChangeLog::$commitData
+     * @see GitChangelog::fetchCommitData()
+     * @see GitChangelog::$commitData
      */
     private function processCommitData(): void
     {
@@ -405,8 +405,8 @@ class GitChangeLog
      * @param   array  $hashes  Hashes to format
      *
      * @return string Formatted hash string.
-     * @see GitChangeLog::$formatHash
-     * @see GitChangeLog::$formatHashes
+     * @see GitChangelog::$formatHash
+     * @see GitChangelog::$formatHashes
      */
     protected function formatHashes(array $hashes): string
     {
@@ -437,7 +437,7 @@ class GitChangeLog
      * @param   string  $filePath  Path to file to save the changelog.
      *
      * @throws RuntimeException When writing of the file fails.
-     * @see GitChangeLog::$baseFile
+     * @see GitChangelog::$baseFile
      */
     public function save(string $filePath): void
     {
@@ -464,7 +464,7 @@ class GitChangeLog
      * @param   bool  $prepend  [Optional] Set to true to prepend the changelog to a base file.
      *
      * @return string The generated changelog, optionally followed by the content of a base file.
-     * @see GitChangeLog::$baseFile
+     * @see GitChangelog::$baseFile
      */
     public function get(bool $prepend = false): string
     {
@@ -519,7 +519,7 @@ class GitChangeLog
      *
      * @param   string  ...$labels  Labels to remove from the filter.
      *
-     * @see GitChangeLog::processCommitData()
+     * @see GitChangelog::processCommitData()
      */
     public function removeLabel(string ...$labels): void
     {
@@ -549,7 +549,7 @@ class GitChangeLog
      *
      * @param   string  ...$labels  Labels to set as filter.
      *
-     * @see GitChangeLog::processCommitData()
+     * @see GitChangelog::processCommitData()
      */
     public function setLabels(...$labels)
     {
@@ -570,7 +570,7 @@ class GitChangeLog
      *
      * @param   string  ...$labels  Labels to add to the filter.
      *
-     * @see GitChangeLog::processCommitData()
+     * @see GitChangelog::processCommitData()
      */
     public function addLabel(...$labels)
     {
@@ -592,7 +592,7 @@ class GitChangeLog
      * @param   mixed  $value  [Optional] Value of option.
      *
      * @throws InvalidArgumentException If the option you're trying to set is invalid.
-     * @see GitChangeLog::$options
+     * @see GitChangelog::$options
      */
     public function setOptions($name, $value = null)
     {

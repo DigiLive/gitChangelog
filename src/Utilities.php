@@ -35,7 +35,7 @@ declare(strict_types=1);
  *
  */
 
-namespace DigiLive\GitChangeLog;
+namespace DigiLive\GitChangelog;
 
 use InvalidArgumentException;
 
@@ -44,7 +44,7 @@ use InvalidArgumentException;
  *
  * This class contains supportive methods to help keeping the complexity of calling code low.
  *
- * @package DigiLive\GitChangeLog
+ * @package DigiLive\GitChangelog
  */
 class Utilities
 {

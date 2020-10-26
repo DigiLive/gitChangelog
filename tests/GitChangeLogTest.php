@@ -37,9 +37,9 @@ declare(strict_types=1);
  *
  */
 
-namespace DigiLive\GitChangeLog\Tests;
+namespace DigiLive\GitChangelog\Tests;
 
-use DigiLive\GitChangeLog\GitChangeLog;
+use DigiLive\GitChangelog\GitChangelog;
 use Exception;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
@@ -48,15 +48,15 @@ use ReflectionException;
 use stdClass;
 
 /**
- * Class GitChangeLogTest
+ * Class GitChangelogTest
  *
- * PHPUnit tests of class GitChangeLog.
+ * PHPUnit tests of class GitChangelog.
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  *
- * @package DigiLive\GitChangeLog\Tests
+ * @package DigiLive\GitChangelog\Tests
  */
-class GitChangeLogTest extends TestCase
+class GitChangelogTest extends TestCase
 {
 
     /**
@@ -69,7 +69,7 @@ class GitChangeLogTest extends TestCase
 
     public function testFetchTagsCached()
     {
-        $changelog = new GitChangeLog();
+        $changelog = new GitChangelog();
 
         $tags = $changelog->fetchTags();
         $this->assertEquals('HEAD', reset($tags));
@@ -77,7 +77,7 @@ class GitChangeLogTest extends TestCase
 
     public function testFetchTagsUncached()
     {
-        $changelog = new GitChangeLog();
+        $changelog = new GitChangelog();
         $changelog->setFromTag('HEAD');
 
         $tags = $changelog->fetchTags(true);
@@ -86,7 +86,7 @@ class GitChangeLogTest extends TestCase
 
     public function testFetchTagsThrowsExceptionOnInvalidFromTag()
     {
-        $changelog = new GitChangeLog();
+        $changelog = new GitChangelog();
         $this->setPrivateProperty($changelog, 'fromTag', 'notExisting');
 
         $this->expectException(Exception::class);
@@ -114,7 +114,7 @@ class GitChangeLogTest extends TestCase
 
     public function testFetchTagsTrowsExceptionOnInvalidToTag()
     {
-        $changelog = new GitChangeLog();
+        $changelog = new GitChangelog();
         $this->setPrivateProperty($changelog, 'toTag', 'notExisting');
 
         $this->expectException(Exception::class);
@@ -123,7 +123,7 @@ class GitChangeLogTest extends TestCase
 
     public function testGet()
     {
-        $changeLog    = new GitChangeLog();
+        $changeLog    = new GitChangelog();
         $dummyContent = 'Dummy Content';
         $this->setPrivateProperty($changeLog, 'changelog', $dummyContent);
 
@@ -145,7 +145,7 @@ class GitChangeLogTest extends TestCase
 
     public function testSetLabels()
     {
-        $changeLog = new GitChangeLog();
+        $changeLog = new GitChangelog();
 
         // Test with string parameters.
         $changeLog->setLabels('label1', 'label2');
@@ -180,7 +180,7 @@ class GitChangeLogTest extends TestCase
 
     public function testSetLabelsRaisesNotice()
     {
-        $changeLog = new GitChangeLog();
+        $changeLog = new GitChangelog();
 
         $this->expectNotice();
         $changeLog->setLabels([]);
@@ -188,7 +188,7 @@ class GitChangeLogTest extends TestCase
 
     public function testSetLabelsRaisesError()
     {
-        $changeLog = new GitChangeLog();
+        $changeLog = new GitChangelog();
 
         $this->expectException('Error');
         $changeLog->setLabels(new stdClass());
@@ -196,7 +196,7 @@ class GitChangeLogTest extends TestCase
 
     public function testFetchCommitData()
     {
-        $changeLog = new GitChangeLog();
+        $changeLog = new GitChangelog();
 
         // Test the format of fetched commit data.
         // The first loop check the fetched data while the second loop checks the cached data.
@@ -217,7 +217,7 @@ class GitChangeLogTest extends TestCase
 
     public function testSetFromTag()
     {
-        $changeLog = new GitChangeLog();
+        $changeLog = new GitChangelog();
 
         // Test setting tag value.
         $changeLog->setFromTag('HEAD');
@@ -234,7 +234,7 @@ class GitChangeLogTest extends TestCase
 
     public function testBuildAscendingCommitOrder()
     {
-        $changeLog = new GitChangeLog();
+        $changeLog = new GitChangelog();
         $changeLog->setOptions('tagOrderDesc', false);
         $testValues     =
             [
@@ -268,7 +268,7 @@ class GitChangeLogTest extends TestCase
 
     public function testBuildDescendingCommitOrder()
     {
-        $changeLog = new GitChangeLog();
+        $changeLog = new GitChangelog();
         $changeLog->setOptions('commitOrder', 'DESC');
         $testValues     =
             [
@@ -302,11 +302,11 @@ class GitChangeLogTest extends TestCase
 
     public function testProcessCommitData()
     {
-        $changeLog = new ReflectionClass('DigiLive\GitChangeLog\GitChangeLog');
+        $changeLog = new ReflectionClass('DigiLive\GitChangelog\GitChangelog');
         $method    = $changeLog->getMethod('processCommitData');
         $method->setAccessible(true);
 
-        $changeLog = new GitChangeLog();
+        $changeLog = new GitChangelog();
         $changeLog->setLabels('C', 'D', 'F');
 
         $commitData = [
@@ -331,7 +331,7 @@ class GitChangeLogTest extends TestCase
 
     public function testAddLabel()
     {
-        $changeLog = new GitChangeLog();
+        $changeLog = new GitChangelog();
 
         $defaultLabels  = $this->getPrivateProperty($changeLog, 'labels');
         $expectedLabels = array_merge($defaultLabels, ['label1', 'label2']);
@@ -347,7 +347,7 @@ class GitChangeLogTest extends TestCase
 
     public function testSetToTag()
     {
-        $changeLog = new GitChangeLog();
+        $changeLog = new GitChangelog();
 
         // Test setting tag value.
         $changeLog->setToTag('HEAD');
@@ -364,7 +364,7 @@ class GitChangeLogTest extends TestCase
 
     public function testRemoveLabel()
     {
-        $changeLog = new GitChangeLog();
+        $changeLog = new GitChangelog();
 
         $defaultLabels = $this->getPrivateProperty($changeLog, 'labels');
 
@@ -381,7 +381,7 @@ class GitChangeLogTest extends TestCase
 
     public function testSave()
     {
-        $changeLog    = new GitChangeLog();
+        $changeLog    = new GitChangelog();
         $saveFilePath = vfsStream::url('testFolder/changelog.md');
         $dummyContent = 'Dummy Content';
         $this->setPrivateProperty($changeLog, 'changelog', $dummyContent);
@@ -410,7 +410,7 @@ class GitChangeLogTest extends TestCase
 
     public function testSaveThrowsExceptionOnWriteableCheck()
     {
-        $changeLog = new GitChangeLog();
+        $changeLog = new GitChangelog();
 
         $this->expectException('RunTimeException');
         $changeLog->save('nonExistingPath/fileName');
@@ -419,7 +419,7 @@ class GitChangeLogTest extends TestCase
 
     public function testSaveThrowsExceptionOnWrite()
     {
-        $changeLog = new GitChangeLog();
+        $changeLog = new GitChangelog();
         $filePath  = vfsStream::url('testFolder/changelog.md');
 
         // Create a file and remove any permission it has.
@@ -432,7 +432,7 @@ class GitChangeLogTest extends TestCase
 
     public function testSetOptions()
     {
-        $changeLog = new GitChangeLog();
+        $changeLog = new GitChangelog();
 
         // Set multiple options at once.
         $changeLog->setOptions(
@@ -451,7 +451,7 @@ class GitChangeLogTest extends TestCase
 
     public function testSetOptionsThrowsException()
     {
-        $changeLog = new GitChangeLog();
+        $changeLog = new GitChangelog();
 
         $this->expectException('InvalidArgumentException');
         $changeLog->setOptions('NotExistingOption', 'Test');

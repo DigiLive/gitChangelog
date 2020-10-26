@@ -35,9 +35,9 @@ declare(strict_types=1);
  *
  */
 
-namespace DigiLive\GitChangeLog\Tests;
+namespace DigiLive\GitChangelog\Tests;
 
-use DigiLive\GitChangeLog\Utilities;
+use DigiLive\GitChangelog\Utilities;
 use PHPUnit\Framework\TestCase;
 
 class UtilitiesTest extends TestCase

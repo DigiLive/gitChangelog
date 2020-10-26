@@ -13,7 +13,7 @@ Check out this [example](CHANGELOG.md) which is actually the changelog of this r
 
 If you have any questions, comments or ideas concerning this library, Please consult
 the [Wiki](https://github.com/DigiLive/gitChangelog/wiki) at first. Create a
-new [issue](https://github.com/DigiLive/gitChangeLog/issues/new) is your concerns remain unanswered.
+new [issue](https://github.com/DigiLive/gitChangelog/issues/new) is your concerns remain unanswered.
 
 ## Features
 
@@ -62,16 +62,16 @@ Alternatively you can download the latest release from [Github](https://github.c
 ```php
 <?php
 
-use DigiLive\GitChangeLog\GitChangeLog;
+use DigiLive\GitChangelog\GitChangelog;
 
 // Instantiate composer's auto loader.
 require __DIR__ . '/../vendor/autoload.php';
 
 // Or include the library manually.
-// require_once 'Path/To/GitChangeLog.php';
+// require_once 'Path/To/GitChangelog.php';
 
 // Instantiate the library.
-$changelog = new GitChangeLog();
+$changelog = new GitChangelog();
 // Build and save the changelog with all defaults.
 $changelog->build();
 $changelog->save('CHANGELOG.md');

@@ -30,8 +30,8 @@
     },
     "autoload": {
         "psr-4": {
-            "DigiLive\\GitChangeLog\\": "src/",
-            "DigiLive\\GitChangeLog\\Tests\\": "tests/"
+            "DigiLive\\GitChangelog\\": "src/",
+            "DigiLive\\GitChangelog\\Tests\\": "tests/"
         }
     }
 }
