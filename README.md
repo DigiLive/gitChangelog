@@ -13,7 +13,7 @@ Check out this [example](CHANGELOG.md) which is actually the changelog of this r
 
 If you have any questions, comments or ideas concerning this library, Please consult
 the [Wiki](https://github.com/DigiLive/gitChangelog/wiki) at first. Create a
-new [issue](https://github.com/DigiLive/gitChangelog/issues/new) is your concerns remain unanswered.
+new [issue](https://github.com/DigiLive/gitChangelog/issues/new) if your concerns remain unanswered.
 
 ## Features
 
