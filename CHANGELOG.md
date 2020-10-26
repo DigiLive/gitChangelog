@@ -2,6 +2,10 @@
 
 ## Next Release (Soon)
 
+* No changes. 
+
+## v0.3.0 (2020-10-26)
+
 * Fix get method ([a9a9804](https://github.com/DigiLive/gitChangelog/commit/a9a9804))
 * Optimize save method ([d0b1a07](https://github.com/DigiLive/gitChangelog/commit/d0b1a07))
 
