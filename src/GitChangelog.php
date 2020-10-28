@@ -78,68 +78,18 @@ use RuntimeException;
 class GitChangelog
 {
     /**
-     * @var string Format of tag strings. {tag} is replaced by the tags found in the git log, {date} is replaced by the
-     *             corresponding tag date.
-     */
-    public $formatTag = "## {tag} ({date})\n\n";
-    /**
-     * @var string Format of hashes. {hashes} is replaced by the concatenated commit hashes.
-     */
-    public $formatHashes = "({hashes})";
-    /**
-     * @var string Format of subjects. {subject} is replaced by commit subjects, {hashes} is replaced by the formatted
-     *             commit hashes.
-     */
-    public $formatSubject = "* {subject} {hashes}\n";
-    /**
      * @var string Path to a base (changelog) file. The generated changelog can be prepend this file.
      */
     public $baseFile;
-    /**
-     * @var string Format of a single commit hash. {hash} is replaced by the commit hash.
-     */
-    public $formatHash = '{hash}';
     /**
      * @var string Path to local git repository. Leave null for repository at current folder.
      */
     public $gitPath;
     /**
-     * @var string Value of the oldest tag to include into the generated changelog.
-     * @see GitChangelog::setFromTag()
-     */
-    protected $fromTag;
-    /**
-     * @var string Value of the newest tag to include into the generated changelog.
-     * @see GitChangelog::setToTag()
-     */
-    protected $toTag = 'HEAD';
-    /**
-     * @var array Contains the tags which exist in the git repository.
-     * @see GitChangelog::fetchTags();
-     */
-    protected $gitTags;
-    /**
      * @var string The generated changelog.
      * @see GitChangelog::build()
      */
     protected $changelog;
-    /**
-     * @var string[] Contains the labels to filter the commit subjects. All subjects which do not start with any of
-     *               these labels will not be listed. To disable this filtering, remove all labels from this variable.
-     */
-    protected $labels = [
-//        'Add',          // Create a capability e.g. feature, test, dependency.
-//        'Cut',          // Remove a capability e.g. feature, test, dependency.
-//        'Fix',          // Fix an issue e.g. bug, typo, accident, misstatement.
-//        'Bump',         // Increase the version of something e.g. dependency.
-//        'Make',         // Change the build process, or tooling, or infra.
-//        'Start',        // Begin doing something; e.g. create a feature flag.
-//        'Stop',         // End doing something; e.g. remove a feature flag.
-//        'Refactor',     // A code change that MUST be just a refactoring.
-//        'Reformat',     // Refactor of formatting, e.g. omit whitespace.
-//        'Optimize',     // Refactor of performance, e.g. speed up code.
-//        'Document',     // Refactor of documentation, e.g. help files.
-    ];
     /**
      * @var array Contains the (processed) information which is fetched from the git repository.
      */
@@ -161,7 +111,7 @@ class GitChangelog
      * @see https://git-scm.com/docs/git-for-each-ref
      */
     protected $options = [
-        'logHeader'           => "# Changelog\n\n",
+        'logHeader'           => 'Changelog',
         'headSubject'         => 'Upcoming changes',
         'nextTagDate'         => 'Undetermined',
         'noChangesMessage'    => 'No changes.',
@@ -170,6 +120,38 @@ class GitChangelog
         'tagOrderBy'          => 'creatordate',
         'tagOrderDesc'        => true,
         'commitOrder'         => 'ASC',
+    ];
+    /**
+     * @var string Value of the oldest tag to include into the generated changelog.
+     * @see GitChangelog::setFromTag()
+     */
+    private $fromTag;
+    /**
+     * @var string Value of the newest tag to include into the generated changelog.
+     * @see GitChangelog::setToTag()
+     */
+    private $toTag = 'HEAD';
+    /**
+     * @var array Contains the tags which exist in the git repository.
+     * @see GitChangelog::fetchTags();
+     */
+    private $gitTags;
+    /**
+     * @var string[] Contains the labels to filter the commit subjects. All subjects which do not start with any of
+     *               these labels will not be listed. To disable this filtering, remove all labels from this variable.
+     */
+    private $labels = [
+//        'Add',          // Create a capability e.g. feature, test, dependency.
+//        'Cut',          // Remove a capability e.g. feature, test, dependency.
+//        'Fix',          // Fix an issue e.g. bug, typo, accident, misstatement.
+//        'Bump',         // Increase the version of something e.g. dependency.
+//        'Make',         // Change the build process, or tooling, or infra.
+//        'Start',        // Begin doing something; e.g. create a feature flag.
+//        'Stop',         // End doing something; e.g. remove a feature flag.
+//        'Refactor',     // A code change that MUST be just a refactoring.
+//        'Reformat',     // Refactor of formatting, e.g. omit whitespace.
+//        'Optimize',     // Refactor of performance, e.g. speed up code.
+//        'Document',     // Refactor of documentation, e.g. help files.
     ];
 
     /**
@@ -221,66 +203,6 @@ class GitChangelog
         $this->gitTags = array_slice($this->gitTags, $toKey, $length);
 
         return $this->gitTags;
-    }
-
-
-    /**
-     * Generate the changelog.
-     *
-     * The generated changelog will be stored into a class property.
-     *
-     * @throws Exception When the defined From- or To-tag doesn't exist in the git repository.
-     * @see GitChangelog::changelog
-     */
-    public function build(): void
-    {
-        $logContent = $this->options['logHeader'];
-        $commitData = $this->fetchCommitData();
-
-        if (!$commitData) {
-            $logContent      .= $this->options['noChangesMessage'];
-            $this->changelog = $logContent . "\n";
-
-            return;
-        }
-
-        if (!$this->options['tagOrderDesc']) {
-            $commitData = array_reverse($commitData);
-        }
-
-        // Build changelog.
-        foreach ($commitData as $tag => &$data) {
-            // Add tag header and date.
-            $tagData = [$tag, $data['date']];
-            if ($tag == 'HEAD') {
-                $tagData = [$this->options['headSubject'], $this->options['nextTagDate']];
-            }
-
-            $logContent .= str_replace(['{tag}', '{date}'], $tagData, $this->formatTag);
-
-            // No subjects present for this tag.
-            if (!$data['subjects']) {
-                $subject    = $this->options['noChangesMessage'];
-                $logContent .= str_replace(['{subject}', '{hashes}'], [$subject, ''], $this->formatSubject);
-                $logContent .= "\n";
-                continue;
-            }
-
-            // Sort commit subjects.
-            Utilities::natSort($data['subjects'], $this->options['commitOrder']);
-
-            // Add commit subjects.
-            foreach ($data['subjects'] as $subjectKey => &$subject) {
-                $logContent .= str_replace(
-                    ['{subject}', '{hashes}'],
-                    [$subject, $this->formatHashes($data['hashes'][$subjectKey])],
-                    $this->formatSubject
-                );
-            }
-            $logContent .= "\n";
-        }
-
-        $this->changelog = trim($logContent) . "\n";
     }
 
     /**
@@ -393,34 +315,6 @@ class GitChangelog
                 }
             }
         }
-    }
-
-    /**
-     * Format the hashes of a commit subject into a string.
-     *
-     * Each hash is formatted as defined by property formatHash.
-     * After formatting, all hashes are concatenated to a single line, comma separated.
-     * Finally this line is formatted as defined by property formatHashes.
-     *
-     * @param   array  $hashes  Hashes to format
-     *
-     * @return string Formatted hash string.
-     * @see GitChangelog::$formatHash
-     * @see GitChangelog::$formatHashes
-     */
-    protected function formatHashes(array $hashes): string
-    {
-        if (!$this->options['addHashes']) {
-            return '';
-        }
-
-        foreach ($hashes as &$hash) {
-            $hash = str_replace('{hash}', $hash, $this->formatHash);
-        }
-        unset($hash);
-        $hashes = implode(', ', $hashes);
-
-        return str_replace('{hashes}', $hashes, $this->formatHashes);
     }
 
     /**
