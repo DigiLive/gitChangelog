@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.3.0 (2020-10-28)
+## v0.4.0 (2020-10-28)
 
 * Add separate renderers for GitChangelog ([2df97ee](https://github.com/DigiLive/gitChangelog/commit/2df97ee))
 
