@@ -2,7 +2,7 @@
 
 ## Next Release (Soon)
 
-* No changes. 
+* Add separate renderers for GitChangelog ([2df97ee](https://github.com/DigiLive/gitChangelog/commit/2df97ee))
 
 ## v0.3.0 (2020-10-26)
 
