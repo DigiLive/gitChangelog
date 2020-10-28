@@ -13,12 +13,13 @@ Check out this [example](CHANGELOG.md) which is actually the changelog of this r
 
 If you have any questions, comments or ideas concerning this library, Please consult
 the [Wiki](https://github.com/DigiLive/gitChangelog/wiki) at first. Create a
-new [issue](https://github.com/DigiLive/gitChangelog/issues/new) is your concerns remain unanswered.
+new [issue](https://github.com/DigiLive/gitChangelog/issues/new) if your concerns remain unanswered.
 
 ## Features
 
 ### Main
 
+- Choose from different renderers or create your own.
 - List Tags and their date.
 - List unique commit subjects per tag/release.
 - List commit hashes per unique subject (optional).
@@ -39,13 +40,20 @@ new [issue](https://github.com/DigiLive/gitChangelog/issues/new) is your concern
 - Set an ordering key for sorting tags/releases<sup>2</sup>.
 - Set the sort order of tags/releases.
 - Set the sort order of subjects.
+
+1. A label is considered to be the first word of a commit subject.
+2. Using an invalid key will result in unlisted changes or when enabled, just the changes of the HEAD revision.
+
+#### Markdown Renderer
+
 - Define a custom format for Tag/Release lines.
 - Define a custom format for subject lines.
 - Define a custom format for singe hashes.
 - Define a custom format for hash lines.
 
-1. A label is considered to be the first word of a commit subject.
-2. Using an invalid key will result in unlisted changes or when enabled, just the changes of the HEAD revision.
+#### Html Renderer
+
+- Define a custom format for singe hashes.
 
 ## Installation
 
@@ -62,29 +70,31 @@ Alternatively you can download the latest release from [Github](https://github.c
 ```php
 <?php
 
-use DigiLive\GitChangelog\GitChangelog;
+use DigiLive\GitChangelog\Renderers\MarkDown;
 
 // Instantiate composer's auto loader.
-require __DIR__ . '/../vendor/autoload.php';
+require 'Path/To/vendor/autoload.php';
 
 // Or include the library manually.
-// require_once 'Path/To/GitChangelog.php';
+// require_once 'Path/To/MarkDown.php';
 
-// Instantiate the library.
-$changelog = new GitChangelog();
-// Build and save the changelog with all defaults.
-$changelog->build();
-$changelog->save('CHANGELOG.md');
+$markDownLog = new MarkDown();
+
+// Generate and save.
+try {
+    $markDownLog->build();
+    $markDownLog->save('CHANGELOG.md');
+} catch (Exception $e) {
+    exit($e);
+}
 ```
 
 ## Notes
 
-- Most settings can be changed directly by setting a public property.
+- Some settings can be changed directly by setting a public property.
   **(Setting a value of an invalid type, might result in unexpected results.)**
 
-- The From- and To tags, have to be set by calling a method, because they're validated.
-
-- Labels must be set by methods also to avoid overhead when adding the same label multiple times.
+- Others have to be set by calling a method.
 
 ## Commit guidelines
 
