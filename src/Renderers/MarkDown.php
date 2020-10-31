@@ -93,8 +93,8 @@ class MarkDown extends GitChangelog implements RendererInterface
             $logContent .= "\n";
             // Add tag header and date.
             $tagData = [$tag, $data['date']];
-            if ($tag == 'HEAD') {
-                $tagData = [$this->options['headSubject'], $this->options['nextTagDate']];
+            if ($tag === '') {
+                $tagData = [$this->options['headTagName'], $this->options['headTagDate']];
             }
 
             $logContent .= str_replace(['{tag}', '{date}'], $tagData, $this->formatTag) . "\n\n";

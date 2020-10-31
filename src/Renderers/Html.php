@@ -77,9 +77,9 @@ class Html extends GitChangelog implements RendererInterface
 
         foreach ($commitData as $tag => $data) {
             // Add tag header and date.
-            if ($tag == 'HEAD') {
-                $tag          = $this->options['headSubject'];
-                $data['date'] = $this->options['nextTagDate'];
+            if ($tag === '') {
+                $tag          = $this->options['headTagName'];
+                $data['date'] = $this->options['headTagDate'];
             }
 
             $logContent .= "<h2>$tag ({$data['date']})</h2><ul>";

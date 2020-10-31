@@ -82,7 +82,7 @@ class GitChangelog
      */
     public $baseFile;
     /**
-     * @var string Path to local git repository. Leave null for repository at current folder.
+     * @var string Path to local git repository. Set to null for repository at current folder.
      */
     public $gitPath;
     /**
@@ -99,8 +99,8 @@ class GitChangelog
      *
      *  <pre>
      *  logHeader           First string of the generated changelog.
-     *  headSubject         Subject of the HEAD revision (Implies unreleased commits).
-     *  nextTagDate         Date at head subject (Implies date of next release).
+     *  headTagName         Name of the HEAD revision (Implies unreleased commits).
+     *  headTagDate         Date of head subject (Implies date of next release).
      *  noChangesMessage    Message to show when there are no commit subjects to list for a tag.
      *  addHashes           True includes commit hashes to the listed subjects.
      *  includeMergeCommits True includes merge commits in the subject lists.
@@ -112,8 +112,8 @@ class GitChangelog
      */
     protected $options = [
         'logHeader'           => 'Changelog',
-        'headSubject'         => 'Upcoming changes',
-        'nextTagDate'         => 'Undetermined',
+        'headTagName'         => 'Upcoming changes',
+        'headTagDate'         => 'Undetermined',
         'noChangesMessage'    => 'No changes.',
         'addHashes'           => true,
         'includeMergeCommits' => false,
@@ -127,12 +127,14 @@ class GitChangelog
      */
     private $fromTag;
     /**
-     * @var string Value of the newest tag to include into the generated changelog.
+     * @var string Value of the newest tag to include into the generated changelog. If the value = an empty string, it
+     *             refers to the HEAD revision.
      * @see GitChangelog::setToTag()
      */
-    private $toTag = 'HEAD';
+    private $toTag = '';
     /**
-     * @var array Contains the tags which exist in the git repository.
+     * @var array Contains the tags which exist in the git repository. If the first element's key is an empty string, it
+     *            refers to the HEAD revision.
      * @see GitChangelog::fetchTags();
      */
     private $gitTags;
@@ -189,15 +191,20 @@ class GitChangelog
         $gitPath .= $this->gitPath ?? './.git';
 
         // Get all git tags.
+        // TODO: Change shell_exec to exec.
         $this->gitTags = explode("\n", shell_exec("git $gitPath tag --sort=-{$this->options['tagOrderBy']}"));
         array_pop($this->gitTags); // Remove empty trailing element.
+
         // Add HEAD revision as tag.
-        if ($this->toTag == 'HEAD') {
-            array_unshift($this->gitTags, 'HEAD');
+        if ($this->toTag === '') {
+            array_unshift($this->gitTags, $this->toTag);
         }
 
-        $toKey  = $this->toTag == 'HEAD' ? 0 : Utilities::arraySearch($this->toTag, $this->gitTags);
-        $length = $this->fromTag === null ? null : Utilities::arraySearch($this->fromTag, $this->gitTags) - $toKey + 1;
+        $toKey  = Utilities::arraySearch($this->toTag, $this->gitTags);
+        $length = null;
+        if ($this->fromTag !== null) {
+            $length = Utilities::arraySearch($this->fromTag, $this->gitTags) - $toKey + 1;
+        }
 
         // Cache requested git tags. $this->gitTags = [newest..oldest].
         $this->gitTags = array_slice($this->gitTags, $toKey, $length);
@@ -251,8 +258,9 @@ class GitChangelog
         // Get tag dates and commit subjects from git log for each tag.
         $includeMergeCommits = $this->options['includeMergeCommits'] ? '' : '--no-merges';
         foreach ($gitTags as $tag) {
-            $tagRange = $tag == '' ? $previousTag : "$tag...$previousTag";
+            $tagRange = $tag == '' ? $previousTag : "$tag..$previousTag";
 
+            // TODO: Change shell_exec to exec.
             $commitData[$previousTag]['date']     =
                 shell_exec("git $gitPath log -1 --pretty=format:%ad --date=short $previousTag");
             $commitData[$previousTag]['subjects'] =
@@ -373,7 +381,7 @@ class GitChangelog
     /**
      * Set the newest git tag to include in the changelog.
      *
-     * Omit or set to 'HEAD' or null to include the HEAD revision into the changelog.
+     * Omit or set to '' or null to include the HEAD revision into the changelog.
      *
      * @param   mixed  $tag  Newest tag to include.
      *
@@ -381,7 +389,7 @@ class GitChangelog
      */
     public function setToTag($tag = null)
     {
-        $tag = $tag ?? 'HEAD';
+        $tag = $tag ?? '';
         Utilities::arraySearch($tag, $this->gitTags);
         $this->toTag = $tag;
     }
@@ -485,7 +493,9 @@ class GitChangelog
      * @param   mixed  $name   Name of option or array of option names and values.
      * @param   mixed  $value  [Optional] Value of option.
      *
+     * @throws Exception If option 'headTag' can't be validated.
      * @throws InvalidArgumentException If the option you're trying to set is invalid.
+     * @throws InvalidArgumentException When setting option 'headTag' to an invalid value.
      * @see GitChangelog::$options
      */
     public function setOptions($name, $value = null)
@@ -496,7 +506,11 @@ class GitChangelog
 
         foreach ($name as $option => $value) {
             if (!array_key_exists($option, $this->options)) {
-                throw new InvalidArgumentException('Attempt to set an invalid option!');
+                throw new InvalidArgumentException("Attempt to set an invalid option: $option!");
+            }
+
+            if ($option == 'headTagName' && in_array($value, $this->fetchTags())) {
+                throw new InvalidArgumentException("Attempt to set $option to an already existing tag value!");
             }
 
             $this->options[$option] = $value;

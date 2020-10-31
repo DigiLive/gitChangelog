@@ -72,16 +72,15 @@ class GitChangelogTest extends TestCase
         $changelog = new GitChangelog();
 
         $tags = $changelog->fetchTags();
-        $this->assertEquals('HEAD', reset($tags));
+        $this->assertSame('', reset($tags));
     }
 
     public function testFetchTagsUncached()
     {
         $changelog = new GitChangelog();
-        $changelog->setFromTag('HEAD');
+        $changelog->setFromTag('');
 
-        $tags = $changelog->fetchTags(true);
-        $this->assertEquals('HEAD', reset($tags));
+        $this->assertEquals([''], $changelog->fetchTags(true));
     }
 
     public function testFetchTagsThrowsExceptionOnInvalidFromTag()
@@ -206,7 +205,7 @@ class GitChangelogTest extends TestCase
             $commitData   = $changeLog->fetchCommitData();
             $firstElement = reset($commitData);
 
-            $this->assertEquals('HEAD', key($commitData));
+            $this->assertSame('', key($commitData));
             $this->assertArrayHasKey('date', $firstElement);
             $this->assertArrayHasKey('subjects', $firstElement);
             $this->assertArrayHasKey('hashes', $firstElement);
@@ -220,8 +219,8 @@ class GitChangelogTest extends TestCase
         $changeLog = new GitChangelog();
 
         // Test setting tag value.
-        $changeLog->setFromTag('HEAD');
-        $this->assertEquals('HEAD', $this->getPrivateProperty($changeLog, 'fromTag'));
+        $changeLog->setFromTag('');
+        $this->assertEquals('', $this->getPrivateProperty($changeLog, 'fromTag'));
 
         // Test removing tag value.
         $changeLog->setFromTag();
@@ -234,6 +233,8 @@ class GitChangelogTest extends TestCase
 
     public function testBuildAscendingCommitOrder()
     {
+        // TODO: Move to renderer tests.
+        $this->markTestSkipped('GitChangelog does not build anymore. Create tests for added renderers.');
         $changeLog = new GitChangelog();
         $changeLog->setOptions('tagOrderDesc', false);
         $testValues     =
@@ -268,6 +269,8 @@ class GitChangelogTest extends TestCase
 
     public function testBuildDescendingCommitOrder()
     {
+        // TODO: Move to renderer tests.
+        $this->markTestSkipped('GitChangelog does not build anymore. Create tests for added renderers.');
         $changeLog = new GitChangelog();
         $changeLog->setOptions('commitOrder', 'DESC');
         $testValues     =
@@ -350,12 +353,12 @@ class GitChangelogTest extends TestCase
         $changeLog = new GitChangelog();
 
         // Test setting tag value.
-        $changeLog->setToTag('HEAD');
-        $this->assertEquals('HEAD', $this->getPrivateProperty($changeLog, 'toTag'));
+        $changeLog->setToTag('');
+        $this->assertEquals('', $this->getPrivateProperty($changeLog, 'toTag'));
 
         // Test removing tag value.
         $changeLog->setToTag();
-        $this->assertEquals('HEAD', $this->getPrivateProperty($changeLog, 'toTag'));
+        $this->assertSame('', $this->getPrivateProperty($changeLog, 'toTag'));
 
         // Test exception.
         $this->expectException('Exception');
@@ -365,7 +368,7 @@ class GitChangelogTest extends TestCase
     public function testRemoveLabel()
     {
         $changeLog = new GitChangelog();
-
+        // FIXME: Set test labels because default labels might be empty.
         $defaultLabels = $this->getPrivateProperty($changeLog, 'labels');
 
         // Test with array parameter.
@@ -377,6 +380,7 @@ class GitChangelogTest extends TestCase
         $changeLog->removeLabel('newLabel1', 'newLabel2');
         array_shift($defaultLabels);
         $this->assertEquals(['newLabel3'], $this->getPrivateProperty($changeLog, 'labels'));
+        // TODO: Add test for removing non existing label.
     }
 
     public function testSave()
@@ -437,23 +441,32 @@ class GitChangelogTest extends TestCase
         // Set multiple options at once.
         $changeLog->setOptions(
             [
-                'logHeader'   => 'Test1',
-                'headSubject' => 'Test2',
+                'logHeader' => 'Test1',
+                'headTagName'   => 'Test2',
             ]
         );
         $this->assertEquals('Test1', $this->getPrivateProperty($changeLog, 'options')['logHeader']);
-        $this->assertEquals('Test2', $this->getPrivateProperty($changeLog, 'options')['headSubject']);
+        $this->assertEquals('Test2', $this->getPrivateProperty($changeLog, 'options')['headTagName']);
 
         // Set single option.
         $changeLog->setOptions('logHeader', 'Test');
         $this->assertEquals('Test', $this->getPrivateProperty($changeLog, 'options')['logHeader']);
     }
 
-    public function testSetOptionsThrowsException()
+    public function testSetOptionsThrowsExceptionOnInvalidOption()
     {
         $changeLog = new GitChangelog();
 
         $this->expectException('InvalidArgumentException');
         $changeLog->setOptions('NotExistingOption', 'Test');
+    }
+
+    public function testSetOptionsThrowsExceptionOnInvalidHeadTagNameValue()
+    {
+        $changeLog = new GitChangelog();
+        $this->setPrivateProperty($changeLog, 'gitTags', ['Test']);
+
+        $this->expectException('InvalidArgumentException');
+        $changeLog->setOptions('headTagName', 'Test');
     }
 }
