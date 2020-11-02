@@ -122,16 +122,17 @@ class GitChangelog
         'commitOrder'         => 'ASC',
     ];
     /**
-     * @var string Value of the oldest tag to include into the generated changelog.
+     * @var string Value of the oldest tag to include into the generated changelog. If the value is null it refers to
+     *             the oldest commit.
      * @see GitChangelog::setFromTag()
      */
     private $fromTag;
     /**
-     * @var string Value of the newest tag to include into the generated changelog. If the value = an empty string, it
-     *             refers to the HEAD revision.
+     * @var string Value of the newest tag to include into the generated changelog. If the value is null, it refers to
+     *             the HEAD revision.
      * @see GitChangelog::setToTag()
      */
-    private $toTag = '';
+    private $toTag;
     /**
      * @var array Contains the tags which exist in the git repository. If the first element's key is an empty string, it
      *            refers to the HEAD revision.
@@ -178,7 +179,8 @@ class GitChangelog
      * @param   bool  $force  [Optional] Set to true to refresh the cached tags.
      *
      * @return array The cached tags.
-     * @throws Exception When the defined From- or To-tag doesn't exist in the git repository.
+     * @throws InvalidArgumentException When the defined From- or To-tag doesn't exist in the git repository.
+     * @throws RuntimeException When executing the git command fails.
      */
     public function fetchTags($force = false): array
     {
@@ -191,12 +193,14 @@ class GitChangelog
         $gitPath .= $this->gitPath ?? './.git';
 
         // Get all git tags.
-        // TODO: Change shell_exec to exec.
-        $this->gitTags = explode("\n", shell_exec("git $gitPath tag --sort=-{$this->options['tagOrderBy']}"));
-        array_pop($this->gitTags); // Remove empty trailing element.
+        $commandResult = 1;
+        exec("git $gitPath tag --sort=-{$this->options['tagOrderBy']}", $this->gitTags, $commandResult);
+        if ($commandResult !== 0) {
+            throw new RuntimeException('An error occurred while fetching the tags from the repository!');
+        }
 
         // Add HEAD revision as tag.
-        if ($this->toTag === '') {
+        if ($this->toTag === null) {
             array_unshift($this->gitTags, $this->toTag);
         }
 
@@ -233,7 +237,8 @@ class GitChangelog
      * @param   false  $force  [Optional] Set to true to refresh the cached tags.
      *
      * @return array    Commit data.
-     * @throws Exception When the defined From- or To-tag doesn't exist in the git repository.
+     * @throws InvalidArgumentException When the defined From- or To-tag doesn't exist in the git repository.
+     * @throws RuntimeException When executing a git command fails.
      * @see GitChangelog::processCommitData()
      */
     public function fetchCommitData($force = false): array
@@ -243,37 +248,36 @@ class GitChangelog
             return $this->commitData;
         }
 
-        $gitTags     = $this->fetchTags();
-        $previousTag = $this->toTag;
-        $commitData  = [];
-
-        // Add empty tag to get commits upto first tag or HEAD revision.
-        if ($this->fromTag === null) {
-            $gitTags[] = '';
-        }
+        $gitTags    = $this->fetchTags();
+        $commitData = [];
 
         $gitPath = '--git-dir ';
         $gitPath .= ($this->gitPath ?? './') . '.git';
 
         // Get tag dates and commit subjects from git log for each tag.
+        $commandResults      = [1, 1];
         $includeMergeCommits = $this->options['includeMergeCommits'] ? '' : '--no-merges';
         foreach ($gitTags as $tag) {
-            $tagRange = $tag == '' ? $previousTag : "$tag..$previousTag";
+            $rangeStart = next($gitTags);
+            $tagRange   = $rangeStart !== false ? "$rangeStart..$tag" : "$tag^";
 
-            // TODO: Change shell_exec to exec.
-            $commitData[$previousTag]['date']     =
-                shell_exec("git $gitPath log -1 --pretty=format:%ad --date=short $previousTag");
-            $commitData[$previousTag]['subjects'] =
-                explode(
-                    "\n",
-                    shell_exec("git $gitPath log $tagRange $includeMergeCommits --pretty=format:%s") ?? ''
-                );
-            $commitData[$previousTag]['hashes']   =
-                explode(
-                    "\n",
-                    shell_exec("git $gitPath log $tagRange $includeMergeCommits --pretty=format:%h") ?? ''
-                );
-            $previousTag                          = $tag;
+            $commitData[$tag]['date'] =
+                shell_exec("git $gitPath log -1 --pretty=format:%ad --date=short $tag") ?? 'Error';
+
+            exec(
+                "git $gitPath log $tagRange $includeMergeCommits --pretty=format:%s",
+                $commitData[$tag]['subjects'],
+                $commandResults[0]
+            );
+            exec(
+                "git $gitPath log $tagRange $includeMergeCommits --pretty=format:%h",
+                $commitData[$tag]['hashes'],
+                $commandResults[1]
+            );
+        }
+
+        if (array_sum($commandResults)) {
+            throw new RuntimeException('An error occurred while fetching the commit data from the repository.');
         }
 
         // Cache commit data and process it.
