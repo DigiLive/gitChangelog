@@ -119,7 +119,7 @@ class GitChangelog
         'includeMergeCommits' => false,
         'tagOrderBy'          => 'creatordate',
         'tagOrderDesc'        => true,
-        'commitOrder'         => 'ASC',
+        'commitOrder'         => 'ASC', //TODO: Refactor to 'subjectOrder'
     ];
     /**
      * @var string Value of the oldest tag to include into the generated changelog. If the value is null it refers to
@@ -196,7 +196,9 @@ class GitChangelog
         $commandResult = 1;
         exec("git $gitPath tag --sort=-{$this->options['tagOrderBy']}", $this->gitTags, $commandResult);
         if ($commandResult !== 0) {
+            // @codeCoverageIgnoreStart
             throw new RuntimeException('An error occurred while fetching the tags from the repository!');
+            // @codeCoverageIgnoreEnd
         }
 
         // Add HEAD revision as tag.
@@ -277,7 +279,9 @@ class GitChangelog
         }
 
         if (array_sum($commandResults)) {
+            // @codeCoverageIgnoreStart
             throw new RuntimeException('An error occurred while fetching the commit data from the repository.');
+            // @codeCoverageIgnoreEnd
         }
 
         // Cache commit data and process it.
