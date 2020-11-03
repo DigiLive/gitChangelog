@@ -70,7 +70,7 @@ class MarkDown extends GitChangelog implements RendererInterface
      *             links which refers to the corresponding issue at the tracker.
      *             {issue} is replaced by the issue number.
      */
-    public $issueUrl = 'https://github.com/DigiLive/gitChangelog/issues/{issue}';
+    public $issueUrl;
 
     /**
      * Generate the changelog.
@@ -86,7 +86,8 @@ class MarkDown extends GitChangelog implements RendererInterface
         $commitData = $this->fetchCommitData();
 
         if (!$commitData) {
-            $this->changelog = "\n$logContent{$this->options['noChangesMessage']}\n";
+            $this->changelog = "$logContent\n{$this->options['noChangesMessage']}\n";
+            return;
         }
 
         if (!$this->options['tagOrderDesc']) {
@@ -106,7 +107,7 @@ class MarkDown extends GitChangelog implements RendererInterface
             // No subjects present for this tag.
             if (!$data['subjects']) {
                 $subject    = $this->options['noChangesMessage'];
-                $logContent .= str_replace(['{subject}', '{hashes}'], [$subject, ''], $this->formatSubject);
+                $logContent .= rtrim(str_replace(['{subject}', '{hashes}'], [$subject, ''], $this->formatSubject));
                 $logContent .= "\n";
                 continue;
             }
@@ -156,10 +157,13 @@ class MarkDown extends GitChangelog implements RendererInterface
             return '';
         }
 
-        foreach ($hashes as &$hash) {
-            $hash = "[$hash](" . str_replace('{hash}', $hash, $this->commitUrl) . ')';
+        if ($this->commitUrl !== null) {
+            foreach ($hashes as &$hash) {
+                $hash = "[$hash](" . str_replace('{hash}', $hash, $this->commitUrl) . ')';
+            }
+            unset($hash);
         }
-        unset($hash);
+
         $hashes = implode(', ', $hashes);
 
         return "($hashes)";
