@@ -72,7 +72,7 @@ class GitChangelogTest extends TestCase
         $changelog = new GitChangelog();
 
         $tags = $changelog->fetchTags();
-        $this->assertSame('', reset($tags));
+        $this->assertNull(reset($tags));
     }
 
     public function testFetchTagsUncached()
@@ -95,14 +95,14 @@ class GitChangelogTest extends TestCase
     /**
      * Sets a private or protected property on a given object via reflection
      *
-     * @param $object    - Instance in which the private or protected value is being modified.
-     * @param $property  - Property of instance which is being modified.
-     * @param $value     - New value of the property which is being modified.
+     * @param   object  $object    - Instance in which the private or protected value is being modified.
+     * @param   string  $property  - Property of instance which is being modified.
+     * @param           $value     - New value of the property which is being modified.
      *
      * @return void
      * @throws ReflectionException If no property exists by that name.
      */
-    public function setPrivateProperty($object, $property, $value): void
+    private function setPrivateProperty(object $object, string $property, $value): void
     {
         $reflection         = new ReflectionClass($object);
         $reflectionProperty = $reflection->getProperty($property);
@@ -161,13 +161,13 @@ class GitChangelogTest extends TestCase
     /**
      * Get a private or protected property on a given object via reflection
      *
-     * @param $object    - Instance in which the private or protected property exists.
-     * @param $property  - Property of instance which is being read.
+     * @param   object  $object    - Instance in which the private or protected property exists.
+     * @param   string  $property  - Property of instance which is being read.
      *
      * @return mixed The value of the property.
      * @throws ReflectionException If no property exists by that name.
      */
-    private function getPrivateProperty($object, $property)
+    private function getPrivateProperty(object $object, string $property)
     {
         $reflection         = new ReflectionClass($object);
         $reflectionProperty = $reflection->getProperty($property);
@@ -229,78 +229,6 @@ class GitChangelogTest extends TestCase
         // Test exception.
         $this->expectException('Exception');
         $changeLog->setFromTag('DoesNotExist');
-    }
-
-    public function testBuildAscendingCommitOrder()
-    {
-        // TODO: Move to renderer tests.
-        $this->markTestSkipped('GitChangelog does not build anymore. Create tests for added renderers.');
-        $changeLog = new GitChangelog();
-        $changeLog->setOptions('tagOrderDesc', false);
-        $testValues     =
-            [
-                // No tags.
-                [],
-                // Head Revision included.
-                ['HEAD' => ['date' => 'B', 'subjects' => ['C', 'D'], 'hashes' => [['E'], ['F']]]],
-                // Dummy tag, no commits.
-                ['A' => ['date' => 'B', 'subjects' => [], 'hashes' => []]],
-                // Dummy tag and commits.
-                ['A' => ['date' => 'B', 'subjects' => ['C', 'D'], 'hashes' => [['E', 'F'], ['G']]]],
-            ];
-        $expectedValues =
-            [
-                //No tags
-                "# Changelog\n\nNo changes.\n",
-                // Head Revision included.
-                "# Changelog\n\n## Upcoming changes (Undetermined)\n\n* C (E)\n* D (F)\n",
-                // Dummy tag, no commits.
-                "# Changelog\n\n## A (B)\n\n* No changes.\n",
-                // Dummy tag and commits.
-                "# Changelog\n\n## A (B)\n\n* C (E, F)\n* D (G)\n",
-            ];
-
-        foreach ($testValues as $key => $value) {
-            $this->setPrivateProperty($changeLog, 'commitData', $value);
-            $changeLog->build();
-            $this->assertEquals($expectedValues[$key], $changeLog->get());
-        }
-    }
-
-    public function testBuildDescendingCommitOrder()
-    {
-        // TODO: Move to renderer tests.
-        $this->markTestSkipped('GitChangelog does not build anymore. Create tests for added renderers.');
-        $changeLog = new GitChangelog();
-        $changeLog->setOptions('commitOrder', 'DESC');
-        $testValues     =
-            [
-                // No tags.
-                [],
-                // Head Revision included.
-                ['HEAD' => ['date' => 'B', 'subjects' => ['C', 'D'], 'hashes' => [['E'], ['F']]]],
-                // Dummy tag, no commits.
-                ['A' => ['date' => 'B', 'subjects' => [], 'hashes' => []]],
-                // Dummy tag and commits.
-                ['A' => ['date' => 'B', 'subjects' => ['C', 'D'], 'hashes' => [['E', 'F'], ['G']]]],
-            ];
-        $expectedValues =
-            [
-                //No tags
-                "# Changelog\n\nNo changes.\n",
-                // Head Revision included.
-                "# Changelog\n\n## Upcoming changes (Undetermined)\n\n* D (F)\n* C (E)\n",
-                // Dummy tag, no commits.
-                "# Changelog\n\n## A (B)\n\n* No changes.\n",
-                // Dummy tag and commits.
-                "# Changelog\n\n## A (B)\n\n* D (G)\n* C (E, F)\n",
-            ];
-
-        foreach ($testValues as $key => $value) {
-            $this->setPrivateProperty($changeLog, 'commitData', $value);
-            $changeLog->build();
-            $this->assertEquals($expectedValues[$key], $changeLog->get());
-        }
     }
 
     public function testProcessCommitData()
@@ -368,19 +296,18 @@ class GitChangelogTest extends TestCase
     public function testRemoveLabel()
     {
         $changeLog = new GitChangelog();
-        // FIXME: Set test labels because default labels might be empty.
-        $defaultLabels = $this->getPrivateProperty($changeLog, 'labels');
+        $labels    = ['Add', 'Cut', 'Fix', 'Bump'];
+
+        $this->setPrivateProperty($changeLog, 'labels', $labels);
 
         // Test with array parameter.
-        $changeLog->removeLabel(...$defaultLabels);
+        $changeLog->removeLabel(...$labels);
         $this->assertEquals([], $this->getPrivateProperty($changeLog, 'labels'));
 
         // Test with string parameters.
         $changeLog->addLabel('newLabel1', 'newLabel2', 'newLabel3');
-        $changeLog->removeLabel('newLabel1', 'newLabel2');
-        array_shift($defaultLabels);
+        $changeLog->removeLabel('newLabel1', 'newLabel2', 'NotExisting');
         $this->assertEquals(['newLabel3'], $this->getPrivateProperty($changeLog, 'labels'));
-        // TODO: Add test for removing non existing label.
     }
 
     public function testSave()
@@ -441,8 +368,8 @@ class GitChangelogTest extends TestCase
         // Set multiple options at once.
         $changeLog->setOptions(
             [
-                'logHeader' => 'Test1',
-                'headTagName'   => 'Test2',
+                'logHeader'   => 'Test1',
+                'headTagName' => 'Test2',
             ]
         );
         $this->assertEquals('Test1', $this->getPrivateProperty($changeLog, 'options')['logHeader']);
