@@ -50,9 +50,17 @@ use Exception;
 class Html extends GitChangelog implements RendererInterface
 {
     /**
-     * @var string Format of a single commit hash. {hash} is replaced by the commit hash.
+     * @var string Url to commit view of the remote repository. If set, hashes of commit subjects are converted into
+     *             links which refer to the corresponding commit at the remote.
+     *             {hash} is replaced by the issue number.
      */
-    public $formatHash = '{hash}';
+    public $commitUrl;
+    /**
+     * @var string Url to Issue tracker of the repository. If set, issue references in commit subject are converted into
+     *             links which refer to the corresponding issue at the tracker.
+     *             {issue} is replaced by the issue number.
+     */
+    public $issueUrl;
 
     /**
      * Generate the changelog.
@@ -63,7 +71,7 @@ class Html extends GitChangelog implements RendererInterface
      */
     public function build(): void
     {
-        $logContent = "<h1>{$this->options['logHeader']}<h1>";
+        $logContent = "<h1>{$this->options['logHeader']}</h1>";
 
         $commitData = $this->fetchCommitData();
 
@@ -95,6 +103,11 @@ class Html extends GitChangelog implements RendererInterface
 
             // Add commit subjects.
             foreach ($data['subjects'] as $subjectKey => $subject) {
+                $subject    = preg_replace(
+                    '/#([0-9]+)/',
+                    '<a href="' . str_replace('{issue}', '$1', $this->issueUrl) . '">' . '$0' . '</a>',
+                    $subject
+                );
                 $logContent .= "<li>$subject (" . $this->formatHashes($data['hashes'][$subjectKey]) . ")</li>";
             }
 
@@ -107,13 +120,13 @@ class Html extends GitChangelog implements RendererInterface
     /**
      * Format the hashes of a commit subject into a string.
      *
-     * Each hash is formatted as defined by property formatHash.
+     * Each hash is formatted into a link as defined by property commitUrl.
      * After formatting, all hashes are concatenated to a single line, comma separated.
      *
      * @param   array  $hashes  Hashes to format
      *
      * @return string Formatted hash string.
-     * @see GitChangelog::$formatHash
+     * @see GitChangelog::$commitUrl
      */
     protected function formatHashes(array $hashes): string
     {
@@ -122,7 +135,7 @@ class Html extends GitChangelog implements RendererInterface
         }
 
         foreach ($hashes as &$hash) {
-            $hash = str_replace('{hash}', $hash, $this->formatHash);
+            $hash = '<a href="' . str_replace('{hash}', $hash, $this->commitUrl) . "\">$hash</a>";
         }
         unset($hash);
 

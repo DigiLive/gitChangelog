@@ -55,18 +55,22 @@ class MarkDown extends GitChangelog implements RendererInterface
      */
     public $formatTag = '## {tag} ({date})';
     /**
-     * @var string Format of hashes. {hashes} is replaced by the concatenated commit hashes.
-     */
-    public $formatHashes = " ({hashes})";
-    /**
      * @var string Format of subjects. {subject} is replaced by commit subjects, {hashes} is replaced by the formatted
      *             commit hashes.
      */
-    public $formatSubject = '* {subject}{hashes}';
+    public $formatSubject = '* {subject} {hashes}';
     /**
-     * @var string Format of a single commit hash. {hash} is replaced by the commit hash.
+     * @var string Url to commit view of the remote repository. If set, hashes of commit subjects are converted into
+     *             links which refer to the corresponding commit at the remote.
+     *             {hash} is replaced by the issue number.
      */
-    public $formatHash = '{hash}';
+    public $commitUrl;
+    /**
+     * @var string Url to Issue tracker of the repository. If set, issue references in commit subject are converted into
+     *             links which refers to the corresponding issue at the tracker.
+     *             {issue} is replaced by the issue number.
+     */
+    public $issueUrl = 'https://github.com/DigiLive/gitChangelog/issues/{issue}';
 
     /**
      * Generate the changelog.
@@ -112,10 +116,19 @@ class MarkDown extends GitChangelog implements RendererInterface
 
             // Add commit subjects.
             foreach ($data['subjects'] as $subjectKey => &$subject) {
-                $logContent .= str_replace(
-                    ['{subject}', '{hashes}'],
-                    [$subject, $this->formatHashes($data['hashes'][$subjectKey])],
-                    $this->formatSubject
+                if ($this->issueUrl !== null) {
+                    $subject = preg_replace(
+                        '/#([0-9]+)/',
+                        '[#$1](' . str_replace('{issue}', '$1', $this->issueUrl) . ')',
+                        $subject
+                    );
+                }
+                $logContent .= rtrim(
+                    str_replace(
+                        ['{subject}', '{hashes}'],
+                        [$subject, $this->formatHashes($data['hashes'][$subjectKey])],
+                        $this->formatSubject
+                    )
                 );
                 $logContent .= "\n";
             }
@@ -127,14 +140,14 @@ class MarkDown extends GitChangelog implements RendererInterface
     /**
      * Format the hashes of a commit subject into a string.
      *
-     * Each hash is formatted as defined by property formatHash.
+     * Each hash is formatted into a link as defined by property commitUrl.
      * After formatting, all hashes are concatenated to a single line, comma separated.
      * Finally this line is formatted as defined by property formatHashes.
      *
      * @param   array  $hashes  Hashes to format
      *
      * @return string Formatted hash string.
-     * @see GitChangelog::$formatHash
+     * @see GitChangelog::$commitUrl
      * @see GitChangelog::$formatHashes
      */
     protected function formatHashes(array $hashes): string
@@ -144,11 +157,11 @@ class MarkDown extends GitChangelog implements RendererInterface
         }
 
         foreach ($hashes as &$hash) {
-            $hash = str_replace('{hash}', $hash, $this->formatHash);
+            $hash = "[$hash](" . str_replace('{hash}', $hash, $this->commitUrl) . ')';
         }
         unset($hash);
         $hashes = implode(', ', $hashes);
 
-        return str_replace('{hashes}', $hashes, $this->formatHashes);
+        return "($hashes)";
     }
 }
