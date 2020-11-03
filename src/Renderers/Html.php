@@ -76,7 +76,9 @@ class Html extends GitChangelog implements RendererInterface
         $commitData = $this->fetchCommitData();
 
         if (!$commitData) {
-            $this->changelog = "<p>$logContent{$this->options['noChangesMessage']}</p>";
+            $this->changelog = "$logContent<p>{$this->options['noChangesMessage']}</p>";
+
+            return;
         }
 
         if (!$this->options['tagOrderDesc']) {
@@ -103,12 +105,14 @@ class Html extends GitChangelog implements RendererInterface
 
             // Add commit subjects.
             foreach ($data['subjects'] as $subjectKey => $subject) {
-                $subject    = preg_replace(
-                    '/#([0-9]+)/',
-                    '<a href="' . str_replace('{issue}', '$1', $this->issueUrl) . '">' . '$0' . '</a>',
-                    $subject
-                );
-                $logContent .= "<li>$subject (" . $this->formatHashes($data['hashes'][$subjectKey]) . ")</li>";
+                if ($this->issueUrl !== null) {
+                    $subject = preg_replace(
+                        '/#([0-9]+)/',
+                        '<a href="' . str_replace('{issue}', '$1', $this->issueUrl) . '">$0</a>',
+                        $subject
+                    );
+                }
+                $logContent .= "<li>$subject " . $this->formatHashes($data['hashes'][$subjectKey]) . '</li>';
             }
 
             $logContent .= '</ul>';
@@ -134,11 +138,13 @@ class Html extends GitChangelog implements RendererInterface
             return '';
         }
 
-        foreach ($hashes as &$hash) {
-            $hash = '<a href="' . str_replace('{hash}', $hash, $this->commitUrl) . "\">$hash</a>";
+        if ($this->commitUrl !== null) {
+            foreach ($hashes as &$hash) {
+                $hash = '<a href="' . str_replace('{hash}', $hash, $this->commitUrl) . "\">$hash</a>";
+            }
+            unset($hash);
         }
-        unset($hash);
 
-        return implode(', ', $hashes);
+        return '(' . implode(', ', $hashes) . ')';
     }
 }
