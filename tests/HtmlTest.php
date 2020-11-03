@@ -123,7 +123,7 @@ class HtmlTest extends TestCase
     public function testBuildDescendingOrders()
     {
         $changeLog = new Html();
-        $changeLog->setOptions('commitOrder', 'DESC');
+        $changeLog->setOptions('subjectOrder', 'DESC');
         $testValues     =
             [
                 // No tags.

@@ -101,7 +101,7 @@ class Html extends GitChangelog implements RendererInterface
             }
 
             // Sort commit subjects.
-            Utilities::natSort($data['subjects'], $this->options['commitOrder']);
+            Utilities::natSort($data['subjects'], $this->options['subjectOrder']);
 
             // Add commit subjects.
             foreach ($data['subjects'] as $subjectKey => $subject) {

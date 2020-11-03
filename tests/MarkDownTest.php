@@ -122,7 +122,7 @@ class MarkDownTest extends TestCase
     public function testBuildDescendingOrders()
     {
         $changeLog = new MarkDown();
-        $changeLog->setOptions('commitOrder', 'DESC');
+        $changeLog->setOptions('subjectOrder', 'DESC');
         $testValues     =
             [
                 // No tags.

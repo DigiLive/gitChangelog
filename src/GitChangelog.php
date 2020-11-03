@@ -106,7 +106,7 @@ class GitChangelog
      *  includeMergeCommits True includes merge commits in the subject lists.
      *  tagOrderBy          Specify on which field the fetched tags have to be ordered.
      *  tagOrderDesc        True to sort the tags in descending order.
-     *  commitOrder         Set to 'ASC' or 'DESC' to sort the subjects in resp. ascending/descending order.
+     *  subjectOrder        Set to 'ASC' or 'DESC' to sort the subjects in resp. ascending/descending order.
      *  </pre>
      * @see https://git-scm.com/docs/git-for-each-ref
      */
@@ -119,7 +119,7 @@ class GitChangelog
         'includeMergeCommits' => false,
         'tagOrderBy'          => 'creatordate',
         'tagOrderDesc'        => true,
-        'commitOrder'         => 'ASC', //TODO: Refactor to 'subjectOrder'
+        'subjectOrder'         => 'ASC',
     ];
     /**
      * @var string Value of the oldest tag to include into the generated changelog. If the value is null it refers to
