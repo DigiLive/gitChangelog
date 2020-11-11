@@ -73,6 +73,9 @@ use RuntimeException;
  *
  * Subject lines must never contain (and / or start with) anything else.
  *
+ * @todo    Change property baseFile to baseContent, see local wiki.
+ * @todo    Refactor subject to title.
+ *
  * @package DigiLive\GitChangelog
  */
 class GitChangelog
@@ -100,7 +103,7 @@ class GitChangelog
      *  <pre>
      *  logHeader           First string of the generated changelog.
      *  headTagName         Name of the HEAD revision (Implies unreleased commits).
-     *  headTagDate         Date of head subject (Implies date of next release).
+     *  headTagDate         Date of head revision (Implies date of next release).
      *  noChangesMessage    Message to show when there are no commit subjects to list for a tag.
      *  addHashes           True includes commit hashes to the listed subjects.
      *  includeMergeCommits True includes merge commits in the subject lists.
@@ -119,7 +122,7 @@ class GitChangelog
         'includeMergeCommits' => false,
         'tagOrderBy'          => 'creatordate',
         'tagOrderDesc'        => true,
-        'subjectOrder'         => 'ASC',
+        'subjectOrder'        => 'ASC',
     ];
     /**
      * @var string Value of the oldest tag to include into the generated changelog. If the value is null it refers to
@@ -226,8 +229,8 @@ class GitChangelog
      * [
      *     Tag => [
      *         'date'           => string,
-     *         'uniqueSubjects' => [],
-     *         'hashes'         => []
+     *         'uniqueSubjects' => string[],
+     *         'hashes'         => string[]
      * ]
      *
      * Note:
@@ -395,7 +398,7 @@ class GitChangelog
      *
      * @throws InvalidArgumentException When the tag does not exits in the repository.
      */
-    public function setToTag($tag = null)
+    public function setToTag($tag = null): void
     {
         $tag = $tag ?? '';
         Utilities::arraySearch($tag, $this->gitTags);
@@ -411,7 +414,7 @@ class GitChangelog
      *
      * @throws InvalidArgumentException When the tag does not exits in the repository.
      */
-    public function setFromTag($tag = null)
+    public function setFromTag($tag = null): void
     {
         if ($tag !== null) {
             Utilities::arraySearch($tag, $this->gitTags);
@@ -447,7 +450,7 @@ class GitChangelog
     /**
      * Set filter labels.
      *
-     * This method clear the existing labels and adds the parameter values as the new labels.
+     * This method clears the existing labels and adds the parameter values as the new labels.
      *
      * Declare a value as parameter for each label you want to set.
      * You can also pass an array of labels, using the splat operator.
@@ -461,7 +464,7 @@ class GitChangelog
      *
      * @see GitChangelog::processCommitData()
      */
-    public function setLabels(...$labels)
+    public function setLabels(...$labels): void
     {
         $this->labels = [];
         $this->addLabel(...$labels);
@@ -506,7 +509,7 @@ class GitChangelog
      * @throws InvalidArgumentException When setting option 'headTag' to an invalid value.
      * @see GitChangelog::$options
      */
-    public function setOptions($name, $value = null)
+    public function setOptions($name, $value = null): void
     {
         if (!is_array($name)) {
             $name = [$name => $value];

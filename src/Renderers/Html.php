@@ -52,7 +52,7 @@ class Html extends GitChangelog implements RendererInterface
     /**
      * @var string Url to commit view of the remote repository. If set, hashes of commit subjects are converted into
      *             links which refer to the corresponding commit at the remote.
-     *             {hash} is replaced by the issue number.
+     *             {hash} is replaced by the commits hash id.
      */
     public $commitUrl;
     /**
