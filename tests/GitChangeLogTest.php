@@ -126,20 +126,24 @@ class GitChangelogTest extends TestCase
         $dummyContent = 'Dummy Content';
         $this->setPrivateProperty($changeLog, 'changelog', $dummyContent);
 
-        // Test without base file.
+        // Test without base content.
         $this->assertequals($dummyContent, $changeLog->get());
 
-        // Test with base file.
+        // Test with base content
+        $changeLog->setBaseContent($dummyContent);
+        $this->assertequals($dummyContent . $dummyContent, $changeLog->get(true));
+
+        // Test with base content from file.
         $baseFilePath    = vfsStream::url('testFolder/baseLog.md');
         $baseFileContent = file_get_contents($baseFilePath);
 
-        $changeLog->baseFile = $baseFilePath;
+        $changeLog->setBaseContent($baseFilePath);
         $this->assertequals($dummyContent . $baseFileContent, $changeLog->get(true));
 
-        // Test warning.
+        // Test with content of unreadable file.
         chmod($baseFilePath, 0000);
-        $this->expectWarning();
-        $changeLog->get(true);
+        $changeLog->setBaseContent($baseFilePath);
+        $this->assertequals($dummyContent . $baseFilePath, $changeLog->get(true));
     }
 
     public function testSetLabels()
@@ -207,9 +211,9 @@ class GitChangelogTest extends TestCase
 
             $this->assertSame('', key($commitData));
             $this->assertArrayHasKey('date', $firstElement);
-            $this->assertArrayHasKey('subjects', $firstElement);
+            $this->assertArrayHasKey('titles', $firstElement);
             $this->assertArrayHasKey('hashes', $firstElement);
-            $this->assertIsArray($firstElement['subjects']);
+            $this->assertIsArray($firstElement['titles']);
             $this->assertIsArray($firstElement['hashes']);
         } while ($loopCount < 2);
     }
@@ -242,17 +246,17 @@ class GitChangelogTest extends TestCase
 
         $commitData = [
             'A' => [
-                'date'     => 'B',
-                'subjects' => [0 => 'C', 1 => 'D', 2 => 'C', 3 => 'E', 4 => 'F'],
-                'hashes'   => [0 => 'G', 1 => 'H', 2 => 'I', 3 => 'J', 4 => 'K'],
+                'date'   => 'B',
+                'titles' => [0 => 'C', 1 => 'D', 2 => 'C', 3 => 'E', 4 => 'F'],
+                'hashes' => [0 => 'G', 1 => 'H', 2 => 'I', 3 => 'J', 4 => 'K'],
             ],
         ];
         $this->setPrivateProperty($changeLog, 'commitData', $commitData);
         $commitData = [
             'A' => [
-                'date'     => 'B',
-                'subjects' => [0 => 'C', 1 => 'D', 4 => 'F'],
-                'hashes'   => [0 => ['G', 'I'], 1 => ['H'], 4 => ['K']],
+                'date'   => 'B',
+                'titles' => [0 => 'C', 1 => 'D', 4 => 'F'],
+                'hashes' => [0 => ['G', 'I'], 1 => ['H'], 4 => ['K']],
             ],
         ];
         $method->invokeArgs($changeLog, []);
@@ -328,15 +332,10 @@ class GitChangelogTest extends TestCase
         $baseFilePath    = vfsStream::url('testFolder/baseLog.md');
         $baseFileContent = file_get_contents($baseFilePath);
 
-        $changeLog->baseFile = $baseFilePath;
+        $changeLog->setBaseContent($baseFilePath);
         $changeLog->save($saveFilePath);
         $fileContent = file_get_contents($saveFilePath);
         $this->assertEquals($dummyContent . $baseFileContent, $fileContent);
-
-        // Test warning.
-        chmod($baseFilePath, 0000);
-        $this->expectWarning();
-        $changeLog->save($saveFilePath);
     }
 
     public function testSaveThrowsExceptionOnWriteableCheck()
@@ -345,7 +344,6 @@ class GitChangelogTest extends TestCase
 
         $this->expectException('RunTimeException');
         $changeLog->save('nonExistingPath/fileName');
-        $changeLog->save(vfsStream::url('testFolder/changelog.md'));
     }
 
     public function testSaveThrowsExceptionOnWrite()

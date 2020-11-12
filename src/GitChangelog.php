@@ -80,13 +80,14 @@ use RuntimeException;
 class GitChangelog
 {
     /**
-     * @var string Path to a base (changelog) file. The generated changelog can be prepend this file.
-     */
-    public $baseFile;
-    /**
      * @var string Path to local git repository. Set to null for repository at current folder.
      */
     public $gitPath;
+    /**
+     * @var string Base content to append to the generated changelog. If the value is a path which resolves to a file,
+     *             the content of this file is appended.
+     */
+    protected $baseContent;
     /**
      * @var string The generated changelog.
      * @see GitChangelog::build()
@@ -338,27 +339,19 @@ class GitChangelog
     /**
      * Save the generated changelog to a file.
      *
-     * When a base file is defined, the content of the new file will be the content of this base file, prepended by the
-     * generated changelog.
-     *
-     * Note:
-     * This method will raise a warning when a base file is defined, but can not be read.
+     * When property GitChangelog::$baseContent is set, the content of the saved file consists of the generated
+     * changelog, appended by the base content.
      *
      * @SuppressWarnings(PHPMD.ErrorControlOperator)
      *
      * @param   string  $filePath  Path to file to save the changelog.
      *
      * @throws RuntimeException When writing of the file fails.
-     * @see GitChangelog::$baseFile
+     * @see GitChangelog::$baseContent
      */
     public function save(string $filePath): void
     {
-        $baseContent = '';
-        if ($this->baseFile !== null) {
-            $baseContent = file_get_contents($this->baseFile);
-        }
-
-        if (@file_put_contents($filePath, $this->changelog . $baseContent) === false) {
+        if (@file_put_contents($filePath, $this->changelog . $this->baseContent) === false) {
             throw new RuntimeException('Unable to write to file!');
         }
     }
@@ -366,26 +359,37 @@ class GitChangelog
     /**
      * Get the content of the generated changelog.
      *
-     * Optionally the changelog can prepend the content of a base file.
+     * Optionally the generated changelog is appended with the content of property GitChangelog::$baseContent.
+     * If this property's value resolves to a valid filepath, the contents of this file is used as base content.
+     * Otherwise the value is considered to be the base content.
      *
-     * Note:
-     * This method will raise a warning when the base file, but can not be read.
+     * @SuppressWarnings(PHPMD.ErrorControlOperator)
      *
-     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+     * @param   bool  $append  [Optional] Set to true to append the changelog with base content.
      *
-     * @param   bool  $prepend  [Optional] Set to true to prepend the changelog to a base file.
-     *
-     * @return string The generated changelog, optionally followed by the content of a base file.
-     * @see GitChangelog::$baseFile
+     * @return string The generated changelog, optionally followed by base content.
+     * @see GitChangelog::$baseContent
      */
-    public function get(bool $prepend = false): string
+    public function get(bool $append = false): string
     {
-        $baseContent = '';
-        if ($prepend && $this->baseFile !== null) {
-            $baseContent = file_get_contents($this->baseFile);
-        }
+        return $this->changelog . ($append ? $this->baseContent : '');
+    }
 
-        return $this->changelog . $baseContent;
+    /**
+     * Set base content for the generated changelog.
+     *
+     * If a base content is set, this content is appended to the generated changelog.
+     * If the argument resolves to a valid filepath, the contents of this file is used as base content.
+     * Otherwise, the argument's value is considered to be the base content.
+     *
+     * @SuppressWarnings(PHPMD.ErrorControlOperator)
+     *
+     * @param   string  $content  Filepath or base content.
+     */
+    public function setBaseContent(string $content): void
+    {
+        $fileContent       = @file_get_contents($content);
+        $this->baseContent = $fileContent !== false ? $fileContent : $content;
     }
 
     /**
