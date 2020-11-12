@@ -142,8 +142,8 @@ class GitChangelog
      */
     private $gitTags;
     /**
-     * @var string[] Contains the labels to filter the commit titles. All titles which do not start with any of
-     *               these labels will not be listed. To disable this filtering, remove all labels from this variable.
+     * @var string[] Contains the labels to filter the commit titles. Only titles which start with any of these labels
+     *               will be listed. To disable this filtering, remove all labels from this property.
      */
     private $labels = [
 //        'Add',          // Create a capability e.g. feature, test, dependency.
