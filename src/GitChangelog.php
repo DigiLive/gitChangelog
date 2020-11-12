@@ -73,8 +73,6 @@ use RuntimeException;
  *
  * Title lines must never contain (and / or start with) anything else.
  *
- * @todo    Change property baseFile to baseContent, see local wiki.
- *
  * @package DigiLive\GitChangelog
  */
 class GitChangelog
@@ -360,8 +358,6 @@ class GitChangelog
      * Get the content of the generated changelog.
      *
      * Optionally the generated changelog is appended with the content of property GitChangelog::$baseContent.
-     * If this property's value resolves to a valid filepath, the contents of this file is used as base content.
-     * Otherwise the value is considered to be the base content.
      *
      * @SuppressWarnings(PHPMD.ErrorControlOperator)
      *
