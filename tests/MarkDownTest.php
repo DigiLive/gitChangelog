@@ -1,4 +1,5 @@
 <?php
+
 /*
  * BSD 3-Clause License
  *
@@ -57,13 +58,13 @@ class MarkDownTest extends TestCase
                 // No tags.
                 [],
                 // Head Revision included.
-                ['' => ['date' => 'B', 'subjects' => ['C', 'D'], 'hashes' => [['E'], ['F']]]],
+                ['' => ['date' => 'B', 'titles' => ['C', 'D'], 'hashes' => [['E'], ['F']]]],
                 // Dummy tag, no commits.
-                ['A' => ['date' => 'B', 'subjects' => [], 'hashes' => []]],
+                ['A' => ['date' => 'B', 'titles' => [], 'hashes' => []]],
                 // Dummy tag and commits.
-                ['A' => ['date' => 'B', 'subjects' => ['C', 'D'], 'hashes' => [['E', 'F'], ['G']]]],
+                ['A' => ['date' => 'B', 'titles' => ['C', 'D'], 'hashes' => [['E', 'F'], ['G']]]],
                 // Dummy tag and commits to be formatted.
-                ['A' => ['date' => 'B', 'subjects' => ['#1'], 'hashes' => [['0123456']]]],
+                ['A' => ['date' => 'B', 'titles' => ['#1'], 'hashes' => [['0123456']]]],
             ];
         $expectedValues =
             [
@@ -122,17 +123,17 @@ class MarkDownTest extends TestCase
     public function testBuildDescendingOrders()
     {
         $changeLog = new MarkDown();
-        $changeLog->setOptions('subjectOrder', 'DESC');
+        $changeLog->setOptions('titleOrder', 'DESC');
         $testValues     =
             [
                 // No tags.
                 [],
                 // Head Revision included.
-                ['' => ['date' => 'B', 'subjects' => ['C', 'D'], 'hashes' => [['E'], ['F']]]],
+                ['' => ['date' => 'B', 'titles' => ['C', 'D'], 'hashes' => [['E'], ['F']]]],
                 // Dummy tag, no commits.
-                ['A' => ['date' => 'B', 'subjects' => [], 'hashes' => []]],
+                ['A' => ['date' => 'B', 'titles' => [], 'hashes' => []]],
                 // Dummy tag and commits.
-                ['A' => ['date' => 'B', 'subjects' => ['C', 'D'], 'hashes' => [['E', 'F'], ['G']]]],
+                ['A' => ['date' => 'B', 'titles' => ['C', 'D'], 'hashes' => [['E', 'F'], ['G']]]],
             ];
         $expectedValues =
             [

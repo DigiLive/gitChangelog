@@ -55,18 +55,18 @@ class MarkDown extends GitChangelog implements RendererInterface
      */
     public $formatTag = '## {tag} ({date})';
     /**
-     * @var string Format of subjects. {subject} is replaced by commit subjects, {hashes} is replaced by the formatted
+     * @var string Format of titles. {title} is replaced by commit titles, {hashes} is replaced by the formatted
      *             commit hashes.
      */
-    public $formatSubject = '* {subject} {hashes}';
+    public $formatTitle = '* {title} {hashes}';
     /**
-     * @var string Url to commit view of the remote repository. If set, hashes of commit subjects are converted into
+     * @var string Url to commit view of the remote repository. If set, hashes of commit titles are converted into
      *             links which refer to the corresponding commit at the remote.
      *             {hash} is replaced by the commits hash id.
      */
     public $commitUrl;
     /**
-     * @var string Url to Issue tracker of the repository. If set, issue references in commit subject are converted into
+     * @var string Url to Issue tracker of the repository. If set, issue references in commit title are converted into
      *             links which refers to the corresponding issue at the tracker.
      *             {issue} is replaced by the issue number.
      */
@@ -87,6 +87,7 @@ class MarkDown extends GitChangelog implements RendererInterface
 
         if (!$commitData) {
             $this->changelog = "$logContent\n{$this->options['noChangesMessage']}\n";
+
             return;
         }
 
@@ -104,31 +105,31 @@ class MarkDown extends GitChangelog implements RendererInterface
 
             $logContent .= str_replace(['{tag}', '{date}'], $tagData, $this->formatTag) . "\n\n";
 
-            // No subjects present for this tag.
-            if (!$data['subjects']) {
-                $subject    = $this->options['noChangesMessage'];
-                $logContent .= rtrim(str_replace(['{subject}', '{hashes}'], [$subject, ''], $this->formatSubject));
+            // No titles present for this tag.
+            if (!$data['titles']) {
+                $title      = $this->options['noChangesMessage'];
+                $logContent .= rtrim(str_replace(['{title}', '{hashes}'], [$title, ''], $this->formatTitle));
                 $logContent .= "\n";
                 continue;
             }
 
-            // Sort commit subjects.
-            Utilities::natSort($data['subjects'], $this->options['subjectOrder']);
+            // Sort commit titles.
+            Utilities::natSort($data['titles'], $this->options['titleOrder']);
 
-            // Add commit subjects.
-            foreach ($data['subjects'] as $subjectKey => &$subject) {
+            // Add commit titles.
+            foreach ($data['titles'] as $titleKey => &$title) {
                 if ($this->issueUrl !== null) {
-                    $subject = preg_replace(
+                    $title = preg_replace(
                         '/#([0-9]+)/',
                         '[#$1](' . str_replace('{issue}', '$1', $this->issueUrl) . ')',
-                        $subject
+                        $title
                     );
                 }
                 $logContent .= rtrim(
                     str_replace(
-                        ['{subject}', '{hashes}'],
-                        [$subject, $this->formatHashes($data['hashes'][$subjectKey])],
-                        $this->formatSubject
+                        ['{title}', '{hashes}'],
+                        [$title, $this->formatHashes($data['hashes'][$titleKey])],
+                        $this->formatTitle
                     )
                 );
                 $logContent .= "\n";
@@ -139,7 +140,7 @@ class MarkDown extends GitChangelog implements RendererInterface
     }
 
     /**
-     * Format the hashes of a commit subject into a string.
+     * Format the hashes of a commit title into a string.
      *
      * Each hash is formatted into a link as defined by property commitUrl.
      * After formatting, all hashes are concatenated to a single line, comma separated.

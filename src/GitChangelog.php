@@ -45,19 +45,19 @@ use RuntimeException;
  * Class GitChangelog
  *
  * Automatically generate a changelog build from git commits.
- * The log includes tags and their date, followed by the subject of each commit which belongs to that tag.
+ * The log includes tags and their date, followed by the title of each commit which belongs to that tag.
  *
  * In order to create a suitable changelog, you should follow the following guidelines:
  *
- * - Commit messages must have a subject line and may have body copy. These must be separated by a blank line.
- * - The subject line must not exceed 50 characters.
- * - The subject line should be capitalized and must not end in a period.
- * - The subject line must be written in an imperative mood (Fix, not Fixed / Fixes etc.).
+ * - Commit messages must have a title line and may have body copy. These must be separated by a blank line.
+ * - The title line must not exceed 50 characters.
+ * - The title line should be capitalized and must not end in a period.
+ * - The title line must be written in an imperative mood (Fix, not Fixed / Fixes etc.).
  * - The body copy must be wrapped at 72 columns.
  * - The body copy must only contain explanations as to what and why, never how.
  *   The latter belongs in documentation and implementation.
  *
- * Subject Line Standard Terminology:
+ * Title Line Standard Terminology:
  * First Word   Meaning
  * Add          Create a capability e.g. feature, test, dependency.
  * Cut          Remove a capability e.g. feature, test, dependency.
@@ -71,10 +71,9 @@ use RuntimeException;
  * Optimize     Refactor of performance, e.g. speed up code.
  * Document     Refactor of documentation, e.g. help files.
  *
- * Subject lines must never contain (and / or start with) anything else.
+ * Title lines must never contain (and / or start with) anything else.
  *
  * @todo    Change property baseFile to baseContent, see local wiki.
- * @todo    Refactor subject to title.
  *
  * @package DigiLive\GitChangelog
  */
@@ -104,12 +103,12 @@ class GitChangelog
      *  logHeader           First string of the generated changelog.
      *  headTagName         Name of the HEAD revision (Implies unreleased commits).
      *  headTagDate         Date of head revision (Implies date of next release).
-     *  noChangesMessage    Message to show when there are no commit subjects to list for a tag.
-     *  addHashes           True includes commit hashes to the listed subjects.
-     *  includeMergeCommits True includes merge commits in the subject lists.
+     *  noChangesMessage    Message to show when there are no commit titles to list for a tag.
+     *  addHashes           True includes commit hashes to the listed titles.
+     *  includeMergeCommits True includes merge commits in the title lists.
      *  tagOrderBy          Specify on which field the fetched tags have to be ordered.
      *  tagOrderDesc        True to sort the tags in descending order.
-     *  subjectOrder        Set to 'ASC' or 'DESC' to sort the subjects in resp. ascending/descending order.
+     *  titleOrder          Set to 'ASC' or 'DESC' to sort the titles in resp. ascending/descending order.
      *  </pre>
      * @see https://git-scm.com/docs/git-for-each-ref
      */
@@ -122,7 +121,7 @@ class GitChangelog
         'includeMergeCommits' => false,
         'tagOrderBy'          => 'creatordate',
         'tagOrderDesc'        => true,
-        'subjectOrder'        => 'ASC',
+        'titleOrder'          => 'ASC',
     ];
     /**
      * @var string Value of the oldest tag to include into the generated changelog. If the value is null it refers to
@@ -143,7 +142,7 @@ class GitChangelog
      */
     private $gitTags;
     /**
-     * @var string[] Contains the labels to filter the commit subjects. All subjects which do not start with any of
+     * @var string[] Contains the labels to filter the commit titles. All titles which do not start with any of
      *               these labels will not be listed. To disable this filtering, remove all labels from this variable.
      */
     private $labels = [
@@ -229,7 +228,7 @@ class GitChangelog
      * [
      *     Tag => [
      *         'date'           => string,
-     *         'uniqueSubjects' => string[],
+     *         'uniqueTitles' => string[],
      *         'hashes'         => string[]
      * ]
      *
@@ -259,7 +258,7 @@ class GitChangelog
         $gitPath = '--git-dir ';
         $gitPath .= ($this->gitPath ?? './') . '.git';
 
-        // Get tag dates and commit subjects from git log for each tag.
+        // Get tag dates and commit titles from git log for each tag.
         $commandResults      = [1, 1];
         $includeMergeCommits = $this->options['includeMergeCommits'] ? '' : '--no-merges';
         foreach ($gitTags as $tag) {
@@ -271,7 +270,7 @@ class GitChangelog
 
             exec(
                 "git $gitPath log $tagRange $includeMergeCommits --pretty=format:%s",
-                $commitData[$tag]['subjects'],
+                $commitData[$tag]['titles'],
                 $commandResults[0]
             );
             exec(
@@ -297,10 +296,10 @@ class GitChangelog
     /**
      * Process the cached commit data.
      *
-     * - Duplicate commit subjects are removed from the data.
-     *   Commit hashes of these duplicates are added to the unique remaining subject.
+     * - Duplicate commit titles are removed from the data.
+     *   Commit hashes of these duplicates are added to the unique remaining title.
      *
-     * - Commit subjects which do not start with any of the defined labels are removed from the data also, unless no
+     * - Commit titles which do not start with any of the defined labels are removed from the data also, unless no
      *   labels are defined at all.
      *
      * @see GitChangelog::fetchCommitData()
@@ -309,27 +308,27 @@ class GitChangelog
     private function processCommitData(): void
     {
         foreach ($this->commitData as $tag => &$data) {
-            // Merge duplicate subjects per tag.
-            foreach ($data['subjects'] as $subjectKey => &$subject) {
+            // Merge duplicate titles per tag.
+            foreach ($data['titles'] as $titleKey => &$title) {
                 // Convert hash element into an array.
-                $data['hashes'][$subjectKey] = [$data['hashes'][$subjectKey]];
+                $data['hashes'][$titleKey] = [$data['hashes'][$titleKey]];
 
-                // Get indexes of all other elements with the same subject as the current one.
-                $duplicates = array_keys($data['subjects'], $subject);
+                // Get indexes of all other elements with the same title as the current one.
+                $duplicates = array_keys($data['titles'], $title);
                 array_shift($duplicates);
 
-                // Add hashes of duplicate subjects to the current subject and remove this duplicates.
-                // Subjects and hashes which belong to each other, have the same array key.
+                // Add hashes of duplicate titles to the current title and remove this duplicates.
+                // Titles and hashes which belong to each other, have the same array key.
                 foreach ($duplicates as $index) {
-                    $data['hashes'][$subjectKey][] = $data['hashes'][$index];
-                    unset($data['subjects'][$index], $data['hashes'][$index]);
+                    $data['hashes'][$titleKey][] = $data['hashes'][$index];
+                    unset($data['titles'][$index], $data['hashes'][$index]);
                 }
 
-                // Remove subjects and hashes without specified labels.
-                if ($this->labels && Utilities::arrayStrPos0($subject, $this->labels) === false) {
+                // Remove titles and hashes without specified labels.
+                if ($this->labels && Utilities::arrayStrPos0($title, $this->labels) === false) {
                     unset(
-                        $this->commitData[$tag]['subjects'][$subjectKey],
-                        $this->commitData[$tag]['hashes'][$subjectKey]
+                        $this->commitData[$tag]['titles'][$titleKey],
+                        $this->commitData[$tag]['hashes'][$titleKey]
                     );
                 }
             }

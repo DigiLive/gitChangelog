@@ -21,9 +21,9 @@ new [issue](https://github.com/DigiLive/gitChangelog/issues/new) if your concern
 
 - Choose from different renderers or create your own.
 - List Tags and their date.
-- List unique commit subjects per tag/release.
-- List commit hashes per unique subject (optional).
-- Include commit subjects (and hashes) of the HEAD revision (E.g. Unreleased changes).
+- List unique commit titles per tag/release.
+- List commit hashes per unique title (optional).
+- Include commit titles (and hashes) of the HEAD revision (E.g. Unreleased changes).
 - Append the content of another file (E.g. An already existing changelog).
 - Save the content of the (appended) changelog to file.
 
@@ -31,23 +31,23 @@ new [issue](https://github.com/DigiLive/gitChangelog/issues/new) if your concern
 
 - Set path to generate a changelog another local repository.
 - Set a From- and To tag to limit the changelog.
-- Filter subjects by labels<sup>1</sup>.
+- Filter titles by labels<sup>1</sup>.
 - Set a header for the changelog (E.g. a title).
-- Set a custom subject for the HEAD revision.
+- Set a custom title for the HEAD revision.
 - Set a custom date for the HEAD revision (E.g. Next Tag/Release date).
 - Set a custom message to indicate there are no commits present.
 - In- or exclude merge commits.
 - Set an ordering key for sorting tags/releases<sup>2</sup>.
 - Set the sort order of tags/releases.
-- Set the sort order of subjects.
+- Set the sort order of titles.
 
-1. A label is considered to be the first word of a commit subject.
+1. A label is considered to be the first word of a commit title.
 2. Using an invalid key will result in unlisted changes or when enabled, just the changes of the HEAD revision.
 
 #### Markdown Renderer
 
 - Define a custom format for Tag/Release lines.
-- Define a custom format for subject lines.
+- Define a custom format for title lines.
 - Define a custom format for singe hashes.
 - Define a custom format for hash lines.
 
@@ -100,13 +100,13 @@ try {
 
 In order to suitable a good changelog, you should follow the following guidelines:
 
-- Commit messages must have a subject line and may have body copy. These must be separated by a blank line.
+- Commit messages must have a title line and may have body copy. These must be separated by a blank line.
 
-- The subject line must not exceed 50 characters.
+- The title line must not exceed 50 characters.
 
-- The subject line should be capitalized and must not end in a period.
+- The title line should be capitalized and must not end in a period.
 
-- The subject line must be written in an imperative mood (Fix, not Fixed / Fixes etc.).
+- The title line must be written in an imperative mood (Fix, not Fixed / Fixes etc.).
 
 - The body copy must be wrapped at 72 columns.
 
