@@ -50,9 +50,17 @@ use Exception;
 class Html extends GitChangelog implements RendererInterface
 {
     /**
-     * @var string Format of a single commit hash. {hash} is replaced by the commit hash.
+     * @var string Url to commit view of the remote repository. If set, hashes of commit titles are converted into
+     *             links which refer to the corresponding commit at the remote.
+     *             {hash} is replaced by the commits hash id.
      */
-    public $formatHash = '{hash}';
+    public $commitUrl;
+    /**
+     * @var string Url to Issue tracker of the repository. If set, issue references in commit title are converted into
+     *             links which refer to the corresponding issue at the tracker.
+     *             {issue} is replaced by the issue number.
+     */
+    public $issueUrl;
 
     /**
      * Generate the changelog.
@@ -63,12 +71,14 @@ class Html extends GitChangelog implements RendererInterface
      */
     public function build(): void
     {
-        $logContent = "<h1>{$this->options['logHeader']}<h1>";
+        $logContent = "<h1>{$this->options['logHeader']}</h1>";
 
         $commitData = $this->fetchCommitData();
 
         if (!$commitData) {
-            $this->changelog = "<p>$logContent{$this->options['noChangesMessage']}</p>";
+            $this->changelog = "$logContent<p>{$this->options['noChangesMessage']}</p>";
+
+            return;
         }
 
         if (!$this->options['tagOrderDesc']) {
@@ -77,25 +87,32 @@ class Html extends GitChangelog implements RendererInterface
 
         foreach ($commitData as $tag => $data) {
             // Add tag header and date.
-            if ($tag == 'HEAD') {
-                $tag          = $this->options['headSubject'];
-                $data['date'] = $this->options['nextTagDate'];
+            if ($tag === '') {
+                $tag          = $this->options['headTagName'];
+                $data['date'] = $this->options['headTagDate'];
             }
 
             $logContent .= "<h2>$tag ({$data['date']})</h2><ul>";
 
-            // No subjects present for this tag.
-            if (!$data['subjects']) {
+            // No titles present for this tag.
+            if (!$data['titles']) {
                 $logContent .= "<li>{$this->options['noChangesMessage']}</li></ul>";
                 continue;
             }
 
-            // Sort commit subjects.
-            Utilities::natSort($data['subjects'], $this->options['commitOrder']);
+            // Sort commit titles.
+            Utilities::natSort($data['titles'], $this->options['titleOrder']);
 
-            // Add commit subjects.
-            foreach ($data['subjects'] as $subjectKey => $subject) {
-                $logContent .= "<li>$subject (" . $this->formatHashes($data['hashes'][$subjectKey]) . ")</li>";
+            // Add commit titles.
+            foreach ($data['titles'] as $titleKey => $title) {
+                if ($this->issueUrl !== null) {
+                    $title = preg_replace(
+                        '/#([0-9]+)/',
+                        '<a href="' . str_replace('{issue}', '$1', $this->issueUrl) . '">$0</a>',
+                        $title
+                    );
+                }
+                $logContent .= "<li>$title " . $this->formatHashes($data['hashes'][$titleKey]) . '</li>';
             }
 
             $logContent .= '</ul>';
@@ -105,15 +122,15 @@ class Html extends GitChangelog implements RendererInterface
     }
 
     /**
-     * Format the hashes of a commit subject into a string.
+     * Format the hashes of a commit title into a string.
      *
-     * Each hash is formatted as defined by property formatHash.
+     * Each hash is formatted into a link as defined by property commitUrl.
      * After formatting, all hashes are concatenated to a single line, comma separated.
      *
      * @param   array  $hashes  Hashes to format
      *
      * @return string Formatted hash string.
-     * @see GitChangelog::$formatHash
+     * @see GitChangelog::$commitUrl
      */
     protected function formatHashes(array $hashes): string
     {
@@ -121,11 +138,13 @@ class Html extends GitChangelog implements RendererInterface
             return '';
         }
 
-        foreach ($hashes as &$hash) {
-            $hash = str_replace('{hash}', $hash, $this->formatHash);
+        if ($this->commitUrl !== null) {
+            foreach ($hashes as &$hash) {
+                $hash = '<a href="' . str_replace('{hash}', $hash, $this->commitUrl) . "\">$hash</a>";
+            }
+            unset($hash);
         }
-        unset($hash);
 
-        return implode(', ', $hashes);
+        return '(' . implode(', ', $hashes) . ')';
     }
 }

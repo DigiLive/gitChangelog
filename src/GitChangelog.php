@@ -45,19 +45,19 @@ use RuntimeException;
  * Class GitChangelog
  *
  * Automatically generate a changelog build from git commits.
- * The log includes tags and their date, followed by the subject of each commit which belongs to that tag.
+ * The log includes tags and their date, followed by the title of each commit which belongs to that tag.
  *
  * In order to create a suitable changelog, you should follow the following guidelines:
  *
- * - Commit messages must have a subject line and may have body copy. These must be separated by a blank line.
- * - The subject line must not exceed 50 characters.
- * - The subject line should be capitalized and must not end in a period.
- * - The subject line must be written in an imperative mood (Fix, not Fixed / Fixes etc.).
+ * - Commit messages must have a title line and may have body copy. These must be separated by a blank line.
+ * - The title line must not exceed 50 characters.
+ * - The title line should be capitalized and must not end in a period.
+ * - The title line must be written in an imperative mood (Fix, not Fixed / Fixes etc.).
  * - The body copy must be wrapped at 72 columns.
  * - The body copy must only contain explanations as to what and why, never how.
  *   The latter belongs in documentation and implementation.
  *
- * Subject Line Standard Terminology:
+ * Title Line Standard Terminology:
  * First Word   Meaning
  * Add          Create a capability e.g. feature, test, dependency.
  * Cut          Remove a capability e.g. feature, test, dependency.
@@ -71,20 +71,21 @@ use RuntimeException;
  * Optimize     Refactor of performance, e.g. speed up code.
  * Document     Refactor of documentation, e.g. help files.
  *
- * Subject lines must never contain (and / or start with) anything else.
+ * Title lines must never contain (and / or start with) anything else.
  *
  * @package DigiLive\GitChangelog
  */
 class GitChangelog
 {
     /**
-     * @var string Path to a base (changelog) file. The generated changelog can be prepend this file.
-     */
-    public $baseFile;
-    /**
-     * @var string Path to local git repository. Leave null for repository at current folder.
+     * @var string Path to local git repository. Set to null for repository at current folder.
      */
     public $gitPath;
+    /**
+     * @var string Base content to append to the generated changelog. If the value is a path which resolves to a file,
+     *             the content of this file is appended.
+     */
+    protected $baseContent;
     /**
      * @var string The generated changelog.
      * @see GitChangelog::build()
@@ -99,46 +100,49 @@ class GitChangelog
      *
      *  <pre>
      *  logHeader           First string of the generated changelog.
-     *  headSubject         Subject of the HEAD revision (Implies unreleased commits).
-     *  nextTagDate         Date at head subject (Implies date of next release).
-     *  noChangesMessage    Message to show when there are no commit subjects to list for a tag.
-     *  addHashes           True includes commit hashes to the listed subjects.
-     *  includeMergeCommits True includes merge commits in the subject lists.
+     *  headTagName         Name of the HEAD revision (Implies unreleased commits).
+     *  headTagDate         Date of head revision (Implies date of next release).
+     *  noChangesMessage    Message to show when there are no commit titles to list for a tag.
+     *  addHashes           True includes commit hashes to the listed titles.
+     *  includeMergeCommits True includes merge commits in the title lists.
      *  tagOrderBy          Specify on which field the fetched tags have to be ordered.
      *  tagOrderDesc        True to sort the tags in descending order.
-     *  commitOrder         Set to 'ASC' or 'DESC' to sort the subjects in resp. ascending/descending order.
+     *  titleOrder          Set to 'ASC' or 'DESC' to sort the titles in resp. ascending/descending order.
      *  </pre>
      * @see https://git-scm.com/docs/git-for-each-ref
      */
     protected $options = [
         'logHeader'           => 'Changelog',
-        'headSubject'         => 'Upcoming changes',
-        'nextTagDate'         => 'Undetermined',
+        'headTagName'         => 'Upcoming changes',
+        'headTagDate'         => 'Undetermined',
         'noChangesMessage'    => 'No changes.',
         'addHashes'           => true,
         'includeMergeCommits' => false,
         'tagOrderBy'          => 'creatordate',
         'tagOrderDesc'        => true,
-        'commitOrder'         => 'ASC',
+        'titleOrder'          => 'ASC',
     ];
     /**
-     * @var string Value of the oldest tag to include into the generated changelog.
+     * @var string Value of the oldest tag to include into the generated changelog. If the value is null it refers to
+     *             the oldest commit.
      * @see GitChangelog::setFromTag()
      */
     private $fromTag;
     /**
-     * @var string Value of the newest tag to include into the generated changelog.
+     * @var string Value of the newest tag to include into the generated changelog. If the value is null, it refers to
+     *             the HEAD revision.
      * @see GitChangelog::setToTag()
      */
-    private $toTag = 'HEAD';
+    private $toTag;
     /**
-     * @var array Contains the tags which exist in the git repository.
+     * @var array Contains the tags which exist in the git repository. If the first element's key is an empty string, it
+     *            refers to the HEAD revision.
      * @see GitChangelog::fetchTags();
      */
     private $gitTags;
     /**
-     * @var string[] Contains the labels to filter the commit subjects. All subjects which do not start with any of
-     *               these labels will not be listed. To disable this filtering, remove all labels from this variable.
+     * @var string[] Contains the labels to filter the commit titles. Only titles which start with any of these labels
+     *               will be listed. To disable this filtering, remove all labels from this property.
      */
     private $labels = [
 //        'Add',          // Create a capability e.g. feature, test, dependency.
@@ -176,7 +180,8 @@ class GitChangelog
      * @param   bool  $force  [Optional] Set to true to refresh the cached tags.
      *
      * @return array The cached tags.
-     * @throws Exception When the defined From- or To-tag doesn't exist in the git repository.
+     * @throws InvalidArgumentException When the defined From- or To-tag doesn't exist in the git repository.
+     * @throws RuntimeException When executing the git command fails.
      */
     public function fetchTags($force = false): array
     {
@@ -189,15 +194,24 @@ class GitChangelog
         $gitPath .= $this->gitPath ?? './.git';
 
         // Get all git tags.
-        $this->gitTags = explode("\n", shell_exec("git $gitPath tag --sort=-{$this->options['tagOrderBy']}"));
-        array_pop($this->gitTags); // Remove empty trailing element.
-        // Add HEAD revision as tag.
-        if ($this->toTag == 'HEAD') {
-            array_unshift($this->gitTags, 'HEAD');
+        $commandResult = 1;
+        exec("git $gitPath tag --sort=-{$this->options['tagOrderBy']}", $this->gitTags, $commandResult);
+        if ($commandResult !== 0) {
+            // @codeCoverageIgnoreStart
+            throw new RuntimeException('An error occurred while fetching the tags from the repository!');
+            // @codeCoverageIgnoreEnd
         }
 
-        $toKey  = $this->toTag == 'HEAD' ? 0 : Utilities::arraySearch($this->toTag, $this->gitTags);
-        $length = $this->fromTag === null ? null : Utilities::arraySearch($this->fromTag, $this->gitTags) - $toKey + 1;
+        // Add HEAD revision as tag.
+        if ($this->toTag === null) {
+            array_unshift($this->gitTags, $this->toTag);
+        }
+
+        $toKey  = Utilities::arraySearch($this->toTag, $this->gitTags);
+        $length = null;
+        if ($this->fromTag !== null) {
+            $length = Utilities::arraySearch($this->fromTag, $this->gitTags) - $toKey + 1;
+        }
 
         // Cache requested git tags. $this->gitTags = [newest..oldest].
         $this->gitTags = array_slice($this->gitTags, $toKey, $length);
@@ -213,8 +227,8 @@ class GitChangelog
      * [
      *     Tag => [
      *         'date'           => string,
-     *         'uniqueSubjects' => [],
-     *         'hashes'         => []
+     *         'uniqueTitles' => string[],
+     *         'hashes'         => string[]
      * ]
      *
      * Note:
@@ -226,7 +240,8 @@ class GitChangelog
      * @param   false  $force  [Optional] Set to true to refresh the cached tags.
      *
      * @return array    Commit data.
-     * @throws Exception When the defined From- or To-tag doesn't exist in the git repository.
+     * @throws InvalidArgumentException When the defined From- or To-tag doesn't exist in the git repository.
+     * @throws RuntimeException When executing a git command fails.
      * @see GitChangelog::processCommitData()
      */
     public function fetchCommitData($force = false): array
@@ -236,36 +251,38 @@ class GitChangelog
             return $this->commitData;
         }
 
-        $gitTags     = $this->fetchTags();
-        $previousTag = $this->toTag;
-        $commitData  = [];
-
-        // Add empty tag to get commits upto first tag or HEAD revision.
-        if ($this->fromTag === null) {
-            $gitTags[] = '';
-        }
+        $gitTags    = $this->fetchTags();
+        $commitData = [];
 
         $gitPath = '--git-dir ';
         $gitPath .= ($this->gitPath ?? './') . '.git';
 
-        // Get tag dates and commit subjects from git log for each tag.
+        // Get tag dates and commit titles from git log for each tag.
+        $commandResults      = [1, 1];
         $includeMergeCommits = $this->options['includeMergeCommits'] ? '' : '--no-merges';
         foreach ($gitTags as $tag) {
-            $tagRange = $tag == '' ? $previousTag : "$tag...$previousTag";
+            $rangeStart = next($gitTags);
+            $tagRange   = $rangeStart !== false ? "$rangeStart..$tag" : "$tag^";
 
-            $commitData[$previousTag]['date']     =
-                shell_exec("git $gitPath log -1 --pretty=format:%ad --date=short $previousTag");
-            $commitData[$previousTag]['subjects'] =
-                explode(
-                    "\n",
-                    shell_exec("git $gitPath log $tagRange $includeMergeCommits --pretty=format:%s") ?? ''
-                );
-            $commitData[$previousTag]['hashes']   =
-                explode(
-                    "\n",
-                    shell_exec("git $gitPath log $tagRange $includeMergeCommits --pretty=format:%h") ?? ''
-                );
-            $previousTag                          = $tag;
+            $commitData[$tag]['date'] =
+                shell_exec("git $gitPath log -1 --pretty=format:%ad --date=short $tag") ?? 'Error';
+
+            exec(
+                "git $gitPath log $tagRange $includeMergeCommits --pretty=format:%s",
+                $commitData[$tag]['titles'],
+                $commandResults[0]
+            );
+            exec(
+                "git $gitPath log $tagRange $includeMergeCommits --pretty=format:%h",
+                $commitData[$tag]['hashes'],
+                $commandResults[1]
+            );
+        }
+
+        if (array_sum($commandResults)) {
+            // @codeCoverageIgnoreStart
+            throw new RuntimeException('An error occurred while fetching the commit data from the repository.');
+            // @codeCoverageIgnoreEnd
         }
 
         // Cache commit data and process it.
@@ -278,10 +295,10 @@ class GitChangelog
     /**
      * Process the cached commit data.
      *
-     * - Duplicate commit subjects are removed from the data.
-     *   Commit hashes of these duplicates are added to the unique remaining subject.
+     * - Duplicate commit titles are removed from the data.
+     *   Commit hashes of these duplicates are added to the unique remaining title.
      *
-     * - Commit subjects which do not start with any of the defined labels are removed from the data also, unless no
+     * - Commit titles which do not start with any of the defined labels are removed from the data also, unless no
      *   labels are defined at all.
      *
      * @see GitChangelog::fetchCommitData()
@@ -290,27 +307,27 @@ class GitChangelog
     private function processCommitData(): void
     {
         foreach ($this->commitData as $tag => &$data) {
-            // Merge duplicate subjects per tag.
-            foreach ($data['subjects'] as $subjectKey => &$subject) {
+            // Merge duplicate titles per tag.
+            foreach ($data['titles'] as $titleKey => &$title) {
                 // Convert hash element into an array.
-                $data['hashes'][$subjectKey] = [$data['hashes'][$subjectKey]];
+                $data['hashes'][$titleKey] = [$data['hashes'][$titleKey]];
 
-                // Get indexes of all other elements with the same subject as the current one.
-                $duplicates = array_keys($data['subjects'], $subject);
+                // Get indexes of all other elements with the same title as the current one.
+                $duplicates = array_keys($data['titles'], $title);
                 array_shift($duplicates);
 
-                // Add hashes of duplicate subjects to the current subject and remove this duplicates.
-                // Subjects and hashes which belong to each other, have the same array key.
+                // Add hashes of duplicate titles to the current title and remove this duplicates.
+                // Titles and hashes which belong to each other, have the same array key.
                 foreach ($duplicates as $index) {
-                    $data['hashes'][$subjectKey][] = $data['hashes'][$index];
-                    unset($data['subjects'][$index], $data['hashes'][$index]);
+                    $data['hashes'][$titleKey][] = $data['hashes'][$index];
+                    unset($data['titles'][$index], $data['hashes'][$index]);
                 }
 
-                // Remove subjects and hashes without specified labels.
-                if ($this->labels && Utilities::arrayStrPos0($subject, $this->labels) === false) {
+                // Remove titles and hashes without specified labels.
+                if ($this->labels && Utilities::arrayStrPos0($title, $this->labels) === false) {
                     unset(
-                        $this->commitData[$tag]['subjects'][$subjectKey],
-                        $this->commitData[$tag]['hashes'][$subjectKey]
+                        $this->commitData[$tag]['titles'][$titleKey],
+                        $this->commitData[$tag]['hashes'][$titleKey]
                     );
                 }
             }
@@ -320,27 +337,19 @@ class GitChangelog
     /**
      * Save the generated changelog to a file.
      *
-     * When a base file is defined, the content of the new file will be the content of this base file, prepended by the
-     * generated changelog.
-     *
-     * Note:
-     * This method will raise a warning when a base file is defined, but can not be read.
+     * When property GitChangelog::$baseContent is set, the content of the saved file consists of the generated
+     * changelog, appended by the base content.
      *
      * @SuppressWarnings(PHPMD.ErrorControlOperator)
      *
      * @param   string  $filePath  Path to file to save the changelog.
      *
      * @throws RuntimeException When writing of the file fails.
-     * @see GitChangelog::$baseFile
+     * @see GitChangelog::$baseContent
      */
     public function save(string $filePath): void
     {
-        $baseContent = '';
-        if ($this->baseFile !== null) {
-            $baseContent = file_get_contents($this->baseFile);
-        }
-
-        if (@file_put_contents($filePath, $this->changelog . $baseContent) === false) {
+        if (@file_put_contents($filePath, $this->changelog . $this->baseContent) === false) {
             throw new RuntimeException('Unable to write to file!');
         }
     }
@@ -348,40 +357,49 @@ class GitChangelog
     /**
      * Get the content of the generated changelog.
      *
-     * Optionally the changelog can prepend the content of a base file.
+     * Optionally the generated changelog is appended with the content of property GitChangelog::$baseContent.
      *
-     * Note:
-     * This method will raise a warning when the base file, but can not be read.
+     * @SuppressWarnings(PHPMD.ErrorControlOperator)
      *
-     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+     * @param   bool  $append  [Optional] Set to true to append the changelog with base content.
      *
-     * @param   bool  $prepend  [Optional] Set to true to prepend the changelog to a base file.
-     *
-     * @return string The generated changelog, optionally followed by the content of a base file.
-     * @see GitChangelog::$baseFile
+     * @return string The generated changelog, optionally followed by base content.
+     * @see GitChangelog::$baseContent
      */
-    public function get(bool $prepend = false): string
+    public function get(bool $append = false): string
     {
-        $baseContent = '';
-        if ($prepend && $this->baseFile !== null) {
-            $baseContent = file_get_contents($this->baseFile);
-        }
+        return $this->changelog . ($append ? $this->baseContent : '');
+    }
 
-        return $this->changelog . $baseContent;
+    /**
+     * Set base content for the generated changelog.
+     *
+     * If a base content is set, this content is appended to the generated changelog.
+     * If the argument resolves to a valid filepath, the contents of this file is used as base content.
+     * Otherwise, the argument's value is considered to be the base content.
+     *
+     * @SuppressWarnings(PHPMD.ErrorControlOperator)
+     *
+     * @param   string  $content  Filepath or base content.
+     */
+    public function setBaseContent(string $content): void
+    {
+        $fileContent       = @file_get_contents($content);
+        $this->baseContent = $fileContent !== false ? $fileContent : $content;
     }
 
     /**
      * Set the newest git tag to include in the changelog.
      *
-     * Omit or set to 'HEAD' or null to include the HEAD revision into the changelog.
+     * Omit or set to '' or null to include the HEAD revision into the changelog.
      *
      * @param   mixed  $tag  Newest tag to include.
      *
      * @throws InvalidArgumentException When the tag does not exits in the repository.
      */
-    public function setToTag($tag = null)
+    public function setToTag($tag = null): void
     {
-        $tag = $tag ?? 'HEAD';
+        $tag = $tag ?? '';
         Utilities::arraySearch($tag, $this->gitTags);
         $this->toTag = $tag;
     }
@@ -395,7 +413,7 @@ class GitChangelog
      *
      * @throws InvalidArgumentException When the tag does not exits in the repository.
      */
-    public function setFromTag($tag = null)
+    public function setFromTag($tag = null): void
     {
         if ($tag !== null) {
             Utilities::arraySearch($tag, $this->gitTags);
@@ -431,7 +449,7 @@ class GitChangelog
     /**
      * Set filter labels.
      *
-     * This method clear the existing labels and adds the parameter values as the new labels.
+     * This method clears the existing labels and adds the parameter values as the new labels.
      *
      * Declare a value as parameter for each label you want to set.
      * You can also pass an array of labels, using the splat operator.
@@ -445,7 +463,7 @@ class GitChangelog
      *
      * @see GitChangelog::processCommitData()
      */
-    public function setLabels(...$labels)
+    public function setLabels(...$labels): void
     {
         $this->labels = [];
         $this->addLabel(...$labels);
@@ -485,10 +503,12 @@ class GitChangelog
      * @param   mixed  $name   Name of option or array of option names and values.
      * @param   mixed  $value  [Optional] Value of option.
      *
+     * @throws Exception If option 'headTag' can't be validated.
      * @throws InvalidArgumentException If the option you're trying to set is invalid.
+     * @throws InvalidArgumentException When setting option 'headTag' to an invalid value.
      * @see GitChangelog::$options
      */
-    public function setOptions($name, $value = null)
+    public function setOptions($name, $value = null): void
     {
         if (!is_array($name)) {
             $name = [$name => $value];
@@ -496,7 +516,11 @@ class GitChangelog
 
         foreach ($name as $option => $value) {
             if (!array_key_exists($option, $this->options)) {
-                throw new InvalidArgumentException('Attempt to set an invalid option!');
+                throw new InvalidArgumentException("Attempt to set an invalid option: $option!");
+            }
+
+            if ($option == 'headTagName' && in_array($value, $this->fetchTags())) {
+                throw new InvalidArgumentException("Attempt to set $option to an already existing tag value!");
             }
 
             $this->options[$option] = $value;

@@ -55,18 +55,22 @@ class MarkDown extends GitChangelog implements RendererInterface
      */
     public $formatTag = '## {tag} ({date})';
     /**
-     * @var string Format of hashes. {hashes} is replaced by the concatenated commit hashes.
-     */
-    public $formatHashes = " ({hashes})";
-    /**
-     * @var string Format of subjects. {subject} is replaced by commit subjects, {hashes} is replaced by the formatted
+     * @var string Format of titles. {title} is replaced by commit titles, {hashes} is replaced by the formatted
      *             commit hashes.
      */
-    public $formatSubject = '* {subject}{hashes}';
+    public $formatTitle = '* {title} {hashes}';
     /**
-     * @var string Format of a single commit hash. {hash} is replaced by the commit hash.
+     * @var string Url to commit view of the remote repository. If set, hashes of commit titles are converted into
+     *             links which refer to the corresponding commit at the remote.
+     *             {hash} is replaced by the commits hash id.
      */
-    public $formatHash = '{hash}';
+    public $commitUrl;
+    /**
+     * @var string Url to Issue tracker of the repository. If set, issue references in commit title are converted into
+     *             links which refers to the corresponding issue at the tracker.
+     *             {issue} is replaced by the issue number.
+     */
+    public $issueUrl;
 
     /**
      * Generate the changelog.
@@ -82,7 +86,9 @@ class MarkDown extends GitChangelog implements RendererInterface
         $commitData = $this->fetchCommitData();
 
         if (!$commitData) {
-            $this->changelog = "\n$logContent{$this->options['noChangesMessage']}\n";
+            $this->changelog = "$logContent\n{$this->options['noChangesMessage']}\n";
+
+            return;
         }
 
         if (!$this->options['tagOrderDesc']) {
@@ -93,29 +99,38 @@ class MarkDown extends GitChangelog implements RendererInterface
             $logContent .= "\n";
             // Add tag header and date.
             $tagData = [$tag, $data['date']];
-            if ($tag == 'HEAD') {
-                $tagData = [$this->options['headSubject'], $this->options['nextTagDate']];
+            if ($tag === '') {
+                $tagData = [$this->options['headTagName'], $this->options['headTagDate']];
             }
 
             $logContent .= str_replace(['{tag}', '{date}'], $tagData, $this->formatTag) . "\n\n";
 
-            // No subjects present for this tag.
-            if (!$data['subjects']) {
-                $subject    = $this->options['noChangesMessage'];
-                $logContent .= str_replace(['{subject}', '{hashes}'], [$subject, ''], $this->formatSubject);
+            // No titles present for this tag.
+            if (!$data['titles']) {
+                $title      = $this->options['noChangesMessage'];
+                $logContent .= rtrim(str_replace(['{title}', '{hashes}'], [$title, ''], $this->formatTitle));
                 $logContent .= "\n";
                 continue;
             }
 
-            // Sort commit subjects.
-            Utilities::natSort($data['subjects'], $this->options['commitOrder']);
+            // Sort commit titles.
+            Utilities::natSort($data['titles'], $this->options['titleOrder']);
 
-            // Add commit subjects.
-            foreach ($data['subjects'] as $subjectKey => &$subject) {
-                $logContent .= str_replace(
-                    ['{subject}', '{hashes}'],
-                    [$subject, $this->formatHashes($data['hashes'][$subjectKey])],
-                    $this->formatSubject
+            // Add commit titles.
+            foreach ($data['titles'] as $titleKey => &$title) {
+                if ($this->issueUrl !== null) {
+                    $title = preg_replace(
+                        '/#([0-9]+)/',
+                        '[#$1](' . str_replace('{issue}', '$1', $this->issueUrl) . ')',
+                        $title
+                    );
+                }
+                $logContent .= rtrim(
+                    str_replace(
+                        ['{title}', '{hashes}'],
+                        [$title, $this->formatHashes($data['hashes'][$titleKey])],
+                        $this->formatTitle
+                    )
                 );
                 $logContent .= "\n";
             }
@@ -125,16 +140,16 @@ class MarkDown extends GitChangelog implements RendererInterface
     }
 
     /**
-     * Format the hashes of a commit subject into a string.
+     * Format the hashes of a commit title into a string.
      *
-     * Each hash is formatted as defined by property formatHash.
+     * Each hash is formatted into a link as defined by property commitUrl.
      * After formatting, all hashes are concatenated to a single line, comma separated.
      * Finally this line is formatted as defined by property formatHashes.
      *
      * @param   array  $hashes  Hashes to format
      *
      * @return string Formatted hash string.
-     * @see GitChangelog::$formatHash
+     * @see GitChangelog::$commitUrl
      * @see GitChangelog::$formatHashes
      */
     protected function formatHashes(array $hashes): string
@@ -143,12 +158,15 @@ class MarkDown extends GitChangelog implements RendererInterface
             return '';
         }
 
-        foreach ($hashes as &$hash) {
-            $hash = str_replace('{hash}', $hash, $this->formatHash);
+        if ($this->commitUrl !== null) {
+            foreach ($hashes as &$hash) {
+                $hash = "[$hash](" . str_replace('{hash}', $hash, $this->commitUrl) . ')';
+            }
+            unset($hash);
         }
-        unset($hash);
+
         $hashes = implode(', ', $hashes);
 
-        return str_replace('{hashes}', $hashes, $this->formatHashes);
+        return "($hashes)";
     }
 }

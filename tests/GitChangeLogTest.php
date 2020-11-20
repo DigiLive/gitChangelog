@@ -72,16 +72,15 @@ class GitChangelogTest extends TestCase
         $changelog = new GitChangelog();
 
         $tags = $changelog->fetchTags();
-        $this->assertEquals('HEAD', reset($tags));
+        $this->assertNull(reset($tags));
     }
 
     public function testFetchTagsUncached()
     {
         $changelog = new GitChangelog();
-        $changelog->setFromTag('HEAD');
+        $changelog->setFromTag('');
 
-        $tags = $changelog->fetchTags(true);
-        $this->assertEquals('HEAD', reset($tags));
+        $this->assertEquals([''], $changelog->fetchTags(true));
     }
 
     public function testFetchTagsThrowsExceptionOnInvalidFromTag()
@@ -96,14 +95,14 @@ class GitChangelogTest extends TestCase
     /**
      * Sets a private or protected property on a given object via reflection
      *
-     * @param $object    - Instance in which the private or protected value is being modified.
-     * @param $property  - Property of instance which is being modified.
-     * @param $value     - New value of the property which is being modified.
+     * @param   object  $object    - Instance in which the private or protected value is being modified.
+     * @param   string  $property  - Property of instance which is being modified.
+     * @param           $value     - New value of the property which is being modified.
      *
      * @return void
      * @throws ReflectionException If no property exists by that name.
      */
-    public function setPrivateProperty($object, $property, $value): void
+    private function setPrivateProperty(object $object, string $property, $value): void
     {
         $reflection         = new ReflectionClass($object);
         $reflectionProperty = $reflection->getProperty($property);
@@ -127,20 +126,24 @@ class GitChangelogTest extends TestCase
         $dummyContent = 'Dummy Content';
         $this->setPrivateProperty($changeLog, 'changelog', $dummyContent);
 
-        // Test without base file.
+        // Test without base content.
         $this->assertequals($dummyContent, $changeLog->get());
 
-        // Test with base file.
+        // Test with base content
+        $changeLog->setBaseContent($dummyContent);
+        $this->assertequals($dummyContent . $dummyContent, $changeLog->get(true));
+
+        // Test with base content from file.
         $baseFilePath    = vfsStream::url('testFolder/baseLog.md');
         $baseFileContent = file_get_contents($baseFilePath);
 
-        $changeLog->baseFile = $baseFilePath;
+        $changeLog->setBaseContent($baseFilePath);
         $this->assertequals($dummyContent . $baseFileContent, $changeLog->get(true));
 
-        // Test warning.
+        // Test with content of unreadable file.
         chmod($baseFilePath, 0000);
-        $this->expectWarning();
-        $changeLog->get(true);
+        $changeLog->setBaseContent($baseFilePath);
+        $this->assertequals($dummyContent . $baseFilePath, $changeLog->get(true));
     }
 
     public function testSetLabels()
@@ -162,13 +165,13 @@ class GitChangelogTest extends TestCase
     /**
      * Get a private or protected property on a given object via reflection
      *
-     * @param $object    - Instance in which the private or protected property exists.
-     * @param $property  - Property of instance which is being read.
+     * @param   object  $object    - Instance in which the private or protected property exists.
+     * @param   string  $property  - Property of instance which is being read.
      *
      * @return mixed The value of the property.
      * @throws ReflectionException If no property exists by that name.
      */
-    private function getPrivateProperty($object, $property)
+    private function getPrivateProperty(object $object, string $property)
     {
         $reflection         = new ReflectionClass($object);
         $reflectionProperty = $reflection->getProperty($property);
@@ -206,11 +209,11 @@ class GitChangelogTest extends TestCase
             $commitData   = $changeLog->fetchCommitData();
             $firstElement = reset($commitData);
 
-            $this->assertEquals('HEAD', key($commitData));
+            $this->assertSame('', key($commitData));
             $this->assertArrayHasKey('date', $firstElement);
-            $this->assertArrayHasKey('subjects', $firstElement);
+            $this->assertArrayHasKey('titles', $firstElement);
             $this->assertArrayHasKey('hashes', $firstElement);
-            $this->assertIsArray($firstElement['subjects']);
+            $this->assertIsArray($firstElement['titles']);
             $this->assertIsArray($firstElement['hashes']);
         } while ($loopCount < 2);
     }
@@ -220,8 +223,8 @@ class GitChangelogTest extends TestCase
         $changeLog = new GitChangelog();
 
         // Test setting tag value.
-        $changeLog->setFromTag('HEAD');
-        $this->assertEquals('HEAD', $this->getPrivateProperty($changeLog, 'fromTag'));
+        $changeLog->setFromTag('');
+        $this->assertEquals('', $this->getPrivateProperty($changeLog, 'fromTag'));
 
         // Test removing tag value.
         $changeLog->setFromTag();
@@ -230,74 +233,6 @@ class GitChangelogTest extends TestCase
         // Test exception.
         $this->expectException('Exception');
         $changeLog->setFromTag('DoesNotExist');
-    }
-
-    public function testBuildAscendingCommitOrder()
-    {
-        $changeLog = new GitChangelog();
-        $changeLog->setOptions('tagOrderDesc', false);
-        $testValues     =
-            [
-                // No tags.
-                [],
-                // Head Revision included.
-                ['HEAD' => ['date' => 'B', 'subjects' => ['C', 'D'], 'hashes' => [['E'], ['F']]]],
-                // Dummy tag, no commits.
-                ['A' => ['date' => 'B', 'subjects' => [], 'hashes' => []]],
-                // Dummy tag and commits.
-                ['A' => ['date' => 'B', 'subjects' => ['C', 'D'], 'hashes' => [['E', 'F'], ['G']]]],
-            ];
-        $expectedValues =
-            [
-                //No tags
-                "# Changelog\n\nNo changes.\n",
-                // Head Revision included.
-                "# Changelog\n\n## Upcoming changes (Undetermined)\n\n* C (E)\n* D (F)\n",
-                // Dummy tag, no commits.
-                "# Changelog\n\n## A (B)\n\n* No changes.\n",
-                // Dummy tag and commits.
-                "# Changelog\n\n## A (B)\n\n* C (E, F)\n* D (G)\n",
-            ];
-
-        foreach ($testValues as $key => $value) {
-            $this->setPrivateProperty($changeLog, 'commitData', $value);
-            $changeLog->build();
-            $this->assertEquals($expectedValues[$key], $changeLog->get());
-        }
-    }
-
-    public function testBuildDescendingCommitOrder()
-    {
-        $changeLog = new GitChangelog();
-        $changeLog->setOptions('commitOrder', 'DESC');
-        $testValues     =
-            [
-                // No tags.
-                [],
-                // Head Revision included.
-                ['HEAD' => ['date' => 'B', 'subjects' => ['C', 'D'], 'hashes' => [['E'], ['F']]]],
-                // Dummy tag, no commits.
-                ['A' => ['date' => 'B', 'subjects' => [], 'hashes' => []]],
-                // Dummy tag and commits.
-                ['A' => ['date' => 'B', 'subjects' => ['C', 'D'], 'hashes' => [['E', 'F'], ['G']]]],
-            ];
-        $expectedValues =
-            [
-                //No tags
-                "# Changelog\n\nNo changes.\n",
-                // Head Revision included.
-                "# Changelog\n\n## Upcoming changes (Undetermined)\n\n* D (F)\n* C (E)\n",
-                // Dummy tag, no commits.
-                "# Changelog\n\n## A (B)\n\n* No changes.\n",
-                // Dummy tag and commits.
-                "# Changelog\n\n## A (B)\n\n* D (G)\n* C (E, F)\n",
-            ];
-
-        foreach ($testValues as $key => $value) {
-            $this->setPrivateProperty($changeLog, 'commitData', $value);
-            $changeLog->build();
-            $this->assertEquals($expectedValues[$key], $changeLog->get());
-        }
     }
 
     public function testProcessCommitData()
@@ -311,17 +246,17 @@ class GitChangelogTest extends TestCase
 
         $commitData = [
             'A' => [
-                'date'     => 'B',
-                'subjects' => [0 => 'C', 1 => 'D', 2 => 'C', 3 => 'E', 4 => 'F'],
-                'hashes'   => [0 => 'G', 1 => 'H', 2 => 'I', 3 => 'J', 4 => 'K'],
+                'date'   => 'B',
+                'titles' => [0 => 'C', 1 => 'D', 2 => 'C', 3 => 'E', 4 => 'F'],
+                'hashes' => [0 => 'G', 1 => 'H', 2 => 'I', 3 => 'J', 4 => 'K'],
             ],
         ];
         $this->setPrivateProperty($changeLog, 'commitData', $commitData);
         $commitData = [
             'A' => [
-                'date'     => 'B',
-                'subjects' => [0 => 'C', 1 => 'D', 4 => 'F'],
-                'hashes'   => [0 => ['G', 'I'], 1 => ['H'], 4 => ['K']],
+                'date'   => 'B',
+                'titles' => [0 => 'C', 1 => 'D', 4 => 'F'],
+                'hashes' => [0 => ['G', 'I'], 1 => ['H'], 4 => ['K']],
             ],
         ];
         $method->invokeArgs($changeLog, []);
@@ -350,12 +285,12 @@ class GitChangelogTest extends TestCase
         $changeLog = new GitChangelog();
 
         // Test setting tag value.
-        $changeLog->setToTag('HEAD');
-        $this->assertEquals('HEAD', $this->getPrivateProperty($changeLog, 'toTag'));
+        $changeLog->setToTag('');
+        $this->assertEquals('', $this->getPrivateProperty($changeLog, 'toTag'));
 
         // Test removing tag value.
         $changeLog->setToTag();
-        $this->assertEquals('HEAD', $this->getPrivateProperty($changeLog, 'toTag'));
+        $this->assertSame('', $this->getPrivateProperty($changeLog, 'toTag'));
 
         // Test exception.
         $this->expectException('Exception');
@@ -365,17 +300,17 @@ class GitChangelogTest extends TestCase
     public function testRemoveLabel()
     {
         $changeLog = new GitChangelog();
+        $labels    = ['Add', 'Cut', 'Fix', 'Bump'];
 
-        $defaultLabels = $this->getPrivateProperty($changeLog, 'labels');
+        $this->setPrivateProperty($changeLog, 'labels', $labels);
 
         // Test with array parameter.
-        $changeLog->removeLabel(...$defaultLabels);
+        $changeLog->removeLabel(...$labels);
         $this->assertEquals([], $this->getPrivateProperty($changeLog, 'labels'));
 
         // Test with string parameters.
         $changeLog->addLabel('newLabel1', 'newLabel2', 'newLabel3');
-        $changeLog->removeLabel('newLabel1', 'newLabel2');
-        array_shift($defaultLabels);
+        $changeLog->removeLabel('newLabel1', 'newLabel2', 'NotExisting');
         $this->assertEquals(['newLabel3'], $this->getPrivateProperty($changeLog, 'labels'));
     }
 
@@ -397,15 +332,10 @@ class GitChangelogTest extends TestCase
         $baseFilePath    = vfsStream::url('testFolder/baseLog.md');
         $baseFileContent = file_get_contents($baseFilePath);
 
-        $changeLog->baseFile = $baseFilePath;
+        $changeLog->setBaseContent($baseFilePath);
         $changeLog->save($saveFilePath);
         $fileContent = file_get_contents($saveFilePath);
         $this->assertEquals($dummyContent . $baseFileContent, $fileContent);
-
-        // Test warning.
-        chmod($baseFilePath, 0000);
-        $this->expectWarning();
-        $changeLog->save($saveFilePath);
     }
 
     public function testSaveThrowsExceptionOnWriteableCheck()
@@ -414,7 +344,6 @@ class GitChangelogTest extends TestCase
 
         $this->expectException('RunTimeException');
         $changeLog->save('nonExistingPath/fileName');
-        $changeLog->save(vfsStream::url('testFolder/changelog.md'));
     }
 
     public function testSaveThrowsExceptionOnWrite()
@@ -438,22 +367,31 @@ class GitChangelogTest extends TestCase
         $changeLog->setOptions(
             [
                 'logHeader'   => 'Test1',
-                'headSubject' => 'Test2',
+                'headTagName' => 'Test2',
             ]
         );
         $this->assertEquals('Test1', $this->getPrivateProperty($changeLog, 'options')['logHeader']);
-        $this->assertEquals('Test2', $this->getPrivateProperty($changeLog, 'options')['headSubject']);
+        $this->assertEquals('Test2', $this->getPrivateProperty($changeLog, 'options')['headTagName']);
 
         // Set single option.
         $changeLog->setOptions('logHeader', 'Test');
         $this->assertEquals('Test', $this->getPrivateProperty($changeLog, 'options')['logHeader']);
     }
 
-    public function testSetOptionsThrowsException()
+    public function testSetOptionsThrowsExceptionOnInvalidOption()
     {
         $changeLog = new GitChangelog();
 
         $this->expectException('InvalidArgumentException');
         $changeLog->setOptions('NotExistingOption', 'Test');
+    }
+
+    public function testSetOptionsThrowsExceptionOnInvalidHeadTagNameValue()
+    {
+        $changeLog = new GitChangelog();
+        $this->setPrivateProperty($changeLog, 'gitTags', ['Test']);
+
+        $this->expectException('InvalidArgumentException');
+        $changeLog->setOptions('headTagName', 'Test');
     }
 }
