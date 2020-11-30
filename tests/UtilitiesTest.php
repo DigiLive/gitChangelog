@@ -40,6 +40,13 @@ namespace DigiLive\GitChangelog\Tests;
 use DigiLive\GitChangelog\Utilities;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Class UtilitiesTest
+ *
+ * PHPUnit tests of class Utilities.
+ *
+ * @package DigiLive\GitChangelog\Tests
+ */
 class UtilitiesTest extends TestCase
 {
 
