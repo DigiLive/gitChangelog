@@ -1,4 +1,5 @@
 <?php
+
 /*
  * BSD 3-Clause License
  *
@@ -78,11 +79,15 @@ class HtmlTest extends TestCase
                 // Dummy tag and commits to be formatted, but they're not.
                 '<h1>Changelog</h1><h2>A (B)</h2><ul><li>#1 (0123456)</li></ul>',
                 // Dummy tag and commits to be formatted, and they are.
-                '<h1>Changelog</h1><h2>A (B)</h2><ul><li><a href="<Issue>1</Issue>">#1</a> (<a href="<Commit>0123456</Commit>">0123456</a>)</li></ul>',
+                '<h1>Changelog</h1><h2>A (B)</h2><ul><li><a href="<Issue>1</Issue>">#1</a>' .
+                ' (<a href="<Commit>0123456</Commit>">0123456</a>)</li></ul>',
                 // Dummy tag and commits to be formatted, but hashes are disabled.
                 '<h1>Changelog</h1><h2>A (B)</h2><ul><li><a href="<Issue>1</Issue>">#1</a> </li></ul>',
             ];
 
+        /** @noinspection PhpParamsInspection
+         *  False positive, @see https://youtrack.jetbrains.com/issue/WI-56952
+         */
         next($testValues);
         foreach ($testValues as $key => $value) {
             $this->setPrivateProperty($changeLog, 'commitData', $value);
