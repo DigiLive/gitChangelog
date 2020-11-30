@@ -261,6 +261,9 @@ class GitChangelog
         $commandResults      = [1, 1];
         $includeMergeCommits = $this->options['includeMergeCommits'] ? '' : '--no-merges';
         foreach ($gitTags as $tag) {
+            /** @noinspection PhpParamsInspection
+             *  False positive, @see https://youtrack.jetbrains.com/issue/WI-56952
+             */
             $rangeStart = next($gitTags);
             $tagRange   = $rangeStart !== false ? "$rangeStart..$tag" : "$tag^";
 
@@ -308,6 +311,9 @@ class GitChangelog
     {
         foreach ($this->commitData as $tag => &$data) {
             // Merge duplicate titles per tag.
+            /** @noinspection PhpParameterByRefIsNotUsedAsReferenceInspection
+             *  @see https://youtrack.jetbrains.com/issue/WI-56632
+             */
             foreach ($data['titles'] as $titleKey => &$title) {
                 // Convert hash element into an array.
                 $data['hashes'][$titleKey] = [$data['hashes'][$titleKey]];
