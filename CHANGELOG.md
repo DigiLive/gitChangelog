@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.0.0 (Soon)
+## v1.0.0 (2020-12-16)
 
 * Add PhpUnit tests for class Html and MarkDown ([a4890bc](https://github.com/DigiLive/gitChangelog/commit/a4890bc))
 * Add code coverage tags ([7ce91b8](https://github.com/DigiLive/gitChangelog/commit/7ce91b8))
@@ -10,6 +10,7 @@
 * Fix [#7](https://github.com/DigiLive/gitChangelog/issues/7), Fix [#8](https://github.com/DigiLive/gitChangelog/issues/8) ([d4e352e](https://github.com/DigiLive/gitChangelog/commit/d4e352e))
 * Fix PhpUnit tests for GitChangelog ([b62ded6](https://github.com/DigiLive/gitChangelog/commit/b62ded6))
 * Fix docBlock of GitChangelog::$labels ([1fea85e](https://github.com/DigiLive/gitChangelog/commit/1fea85e))
+* Fix filename to PSR4 rules ([27911a9](https://github.com/DigiLive/gitChangelog/commit/27911a9))
 * Fix html renderer ([c66b572](https://github.com/DigiLive/gitChangelog/commit/c66b572))
 * Fix markdown renderer ([ab29669](https://github.com/DigiLive/gitChangelog/commit/ab29669))
 * Optimize Git execution and Fix docBlocks ([fc79a58](https://github.com/DigiLive/gitChangelog/commit/fc79a58))
