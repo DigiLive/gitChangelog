@@ -186,6 +186,9 @@ class GitChangelogTest extends TestCase
         $changeLog = new GitChangelog();
 
         $this->expectNotice();
+        if (version_compare(PHP_VERSION, '8.0.0') >= 0) {
+            $this->expectWarning();
+        }
         $changeLog->setLabels([]);
     }
 
