@@ -194,6 +194,7 @@ class GitChangelog
         $gitPath .= $this->gitPath ?? './.git';
 
         // Get all git tags.
+        $this->gitTags = [];
         $commandResult = 1;
         exec("git $gitPath tag --sort=-{$this->options['tagOrderBy']}", $this->gitTags, $commandResult);
         if ($commandResult !== 0) {
