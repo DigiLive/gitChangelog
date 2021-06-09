@@ -183,7 +183,7 @@ class GitChangelog
      * @throws InvalidArgumentException When the defined From- or To-tag doesn't exist in the git repository.
      * @throws RuntimeException When executing the git command fails.
      */
-    public function fetchTags($force = false): array
+    public function fetchTags(bool $force = false): array
     {
         // Return cached results unless forced to update.
         if (!$force && $this->gitTags !== null) {
@@ -245,7 +245,7 @@ class GitChangelog
      * @throws RuntimeException When executing a git command fails.
      * @see GitChangelog::processCommitData()
      */
-    public function fetchCommitData($force = false): array
+    public function fetchCommitData(bool $force = false): array
     {
         // Return cached results unless forced to update.
         if (!$force && $this->commitData !== null) {
@@ -312,8 +312,9 @@ class GitChangelog
     {
         foreach ($this->commitData as $tag => &$data) {
             // Merge duplicate titles per tag.
-            /** @noinspection PhpParameterByRefIsNotUsedAsReferenceInspection
-             *  @see https://youtrack.jetbrains.com/issue/WI-56632
+            /**
+             * @noinspection PhpParameterByRefIsNotUsedAsReferenceInspection
+             * @see https://youtrack.jetbrains.com/issue/WI-56632
              */
             foreach ($data['titles'] as $titleKey => &$title) {
                 // Convert hash element into an array.
@@ -400,9 +401,9 @@ class GitChangelog
      *
      * Omit or set to '' or null to include the HEAD revision into the changelog.
      *
-     * @param   mixed  $tag  Newest tag to include.
+     * @param   mixed  $tag  The newest tag to include.
      *
-     * @throws InvalidArgumentException When the tag does not exits in the repository.
+     * @throws InvalidArgumentException When the tag does not exist in the repository.
      */
     public function setToTag($tag = null): void
     {
@@ -487,7 +488,7 @@ class GitChangelog
      * This method raises a notice on array values or fatal error on objects that don't implement the __toString()
      * method.
      *
-     * @param   string  ...$labels  Labels to add to the filter.
+     * @param   string|string[]  ...$labels  Labels to add to the filter.
      *
      * @see GitChangelog::processCommitData()
      */
