@@ -78,9 +78,10 @@ class GitChangelogTest extends TestCase
     public function testFetchTagsUncached()
     {
         $changelog = new GitChangelog();
+        $this->setPrivateProperty($changelog, 'gitTags', [null, 'dummyTag']);
         $changelog->setFromTag('');
 
-        $this->assertEquals([''], $changelog->fetchTags(true));
+        $this->assertSame([null], $changelog->fetchTags(true));
     }
 
     public function testFetchTagsThrowsExceptionOnInvalidFromTag()
