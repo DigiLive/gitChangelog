@@ -59,17 +59,17 @@ use RuntimeException;
  *
  * Title Line Standard Terminology:
  * First Word   Meaning
- * Add          Create a capability e.g. feature, test, dependency.
- * Cut          Remove a capability e.g. feature, test, dependency.
- * Fix          Fix an issue e.g. bug, typo, accident, misstatement.
- * Bump         Increase the version of something e.g. dependency.
- * Make         Change the build process, or tooling, or infra.
- * Start        Begin doing something; e.g. create a feature flag.
- * Stop         End doing something; e.g. remove a feature flag.
+ * Add          Create a capability; E.g., feature, test, dependency.
+ * Cut          Remove a capability; E.g., feature, test, dependency.
+ * Fix          Fix an issue; E.g., bug, typo, accident, misstatement.
+ * Bump         Increase the version of something E.g. dependency.
+ * Make         Change the build process, tooling, or infra.
+ * Start        Begin doing something; E.g., create a feature flag.
+ * Stop         End doing something; E.g., remove a feature flag.
  * Refactor     A code change that MUST be just a refactoring.
- * Reformat     Refactor of formatting, e.g. omit whitespace.
- * Optimize     Refactor of performance, e.g. speed up code.
- * Document     Refactor of documentation, e.g. help files.
+ * Reformat     Refactor of formatting; E.g., omit whitespace.
+ * Optimize     Refactor of performance; E.g., speed up code.
+ * Document     Refactor of documentation; E.g., help files.
  *
  * Title lines must never contain (and / or start with) anything else.
  *
@@ -83,7 +83,7 @@ class GitChangelog
     public $gitPath;
     /**
      * @var string Base content to append to the generated changelog. If the value is a path which resolves to a file,
-     *             the content of this file is appended.
+     *             append the content of this file.
      */
     protected $baseContent;
     /**
@@ -123,26 +123,27 @@ class GitChangelog
         'titleOrder'          => 'ASC',
     ];
     /**
-     * @var string Value of the oldest tag to include into the generated changelog. If the value is null it refers to
-     *             the oldest commit.
+     * @var string Value of the oldest tag to include into the generated changelog.
+     *             If the value is null it refers to the oldest commit.
      * @see GitChangelog::setFromTag()
      */
     private $fromTag;
     /**
-     * @var string Value of the newest tag to include into the generated changelog. If the value is null, it refers to
-     *             the HEAD revision.
+     * @var string Value of the newest tag to include into the generated changelog.
+     *             If the value is null, it refers to the HEAD revision.
      * @see GitChangelog::setToTag()
      */
     private $toTag;
     /**
-     * @var array Contains the tags which exist in the git repository. If the first element's key is an empty string, it
-     *            refers to the HEAD revision.
+     * @var array Contains the tags which exist in the git repository.
+     *            If the first element's key is null, it refers to the HEAD revision.
      * @see GitChangelog::fetchTags();
      */
     private $gitTags;
     /**
-     * @var string[] Contains the labels to filter the commit titles. Only titles which start with any of these labels
-     *               will be listed. To disable this filtering, remove all labels from this property.
+     * @var string[] Contains the labels to filter the commit titles.
+     *               Only titles which start with any of these labels will be listed.
+     *               To disable this filtering, remove all labels from this property.
      */
     private $labels = [
 //        'Add',          // Create a capability e.g. feature, test, dependency.
@@ -314,7 +315,7 @@ class GitChangelog
             // Merge duplicate titles per tag.
             /**
              * @noinspection PhpParameterByRefIsNotUsedAsReferenceInspection
-             * @see https://youtrack.jetbrains.com/issue/WI-56632
+             * @see          https://youtrack.jetbrains.com/issue/WI-56632
              */
             foreach ($data['titles'] as $titleKey => &$title) {
                 // Convert hash element into an array.
@@ -417,9 +418,9 @@ class GitChangelog
      *
      * Omit or set to null to include the oldest tag into the changelog.
      *
-     * @param   mixed  $tag  Oldest tag to include.
+     * @param   mixed  $tag  The oldest tag to include.
      *
-     * @throws InvalidArgumentException When the tag does not exits in the repository.
+     * @throws InvalidArgumentException When the tag does not exist in the repository.
      */
     public function setFromTag($tag = null): void
     {
