@@ -192,7 +192,7 @@ class GitChangelog
         }
 
         $gitPath = '--git-dir ';
-        $gitPath .= $this->gitPath ?? './.git';
+        $gitPath .= ($this->gitPath ?? './') . '.git';
 
         // Get all git tags.
         $this->gitTags = [];
