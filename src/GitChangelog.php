@@ -228,13 +228,17 @@ class GitChangelog
     /**
      * Fetch the commit data from the git repository.
      *
+     * The tags are re-fetched from the repository, honoring the properties GitChangelog::$fromTag,
+     * GitChangelog::$endTag and GitChangelog::options['tagOrderBy'].
+     * Afterwards, the commit data of the re-fetched tags is fetched from the repository.
+     *
      * Commit data is formatted as follows after it is processed:
      *
      * [
      *     Tag => [
-     *         'date'           => string,
+     *         'date'         => string,
      *         'uniqueTitles' => string[],
-     *         'hashes'         => string[]
+     *         'hashes'       => string[]
      * ]
      *
      * Note:
@@ -257,7 +261,8 @@ class GitChangelog
             return $this->commitData;
         }
 
-        $gitTags    = $this->fetchTags();
+        // Re-fetch tags because tag range and order can be altered after pre-fetch.
+        $gitTags    = $this->fetchTags(true);
         $commitData = [];
 
         $gitPath = "--git-dir {$this->gitPath}.git";
