@@ -78,7 +78,7 @@ use RuntimeException;
 class GitChangelog
 {
     /**
-     * @var string Path to local git repository. Set to null for repository at current folder.
+     * @var string Path to local git repository.
      */
     public $gitPath;
     /**
@@ -162,10 +162,15 @@ class GitChangelog
     /**
      * GitChangelog constructor.
      *
+     * All git tags are pre-fetched from the repository at the given path.
+     *
+     * @param   string  $gitPath  Path to the repository directory.
+     *
      * @throws Exception When the defined From- or To-tag doesn't exist in the git repository.
      */
-    public function __construct()
+    public function __construct(string $gitPath = './')
     {
+        $this->gitPath = $gitPath;
         $this->fetchTags();
     }
 
@@ -191,8 +196,7 @@ class GitChangelog
             return $this->gitTags;
         }
 
-        $gitPath = '--git-dir ';
-        $gitPath .= ($this->gitPath ?? './') . '.git';
+        $gitPath = "--git-dir {$this->gitPath}.git";
 
         // Get all git tags.
         $this->gitTags = [];
@@ -256,8 +260,7 @@ class GitChangelog
         $gitTags    = $this->fetchTags();
         $commitData = [];
 
-        $gitPath = '--git-dir ';
-        $gitPath .= ($this->gitPath ?? './') . '.git';
+        $gitPath = "--git-dir {$this->gitPath}.git";
 
         // Get tag dates and commit titles from git log for each tag.
         $commandResults      = [1, 1];
