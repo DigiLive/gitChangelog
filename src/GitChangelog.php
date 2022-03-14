@@ -175,7 +175,7 @@ class GitChangelog
     }
 
     /**
-     * Fetch all tags from the git repository.
+     * Fetch tags from the git repository.
      *
      * Note:
      * Re-calling this method will not overwrite the tags which where retrieved at an earlier call.
@@ -247,7 +247,7 @@ class GitChangelog
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      *
-     * @param   false  $force  [Optional] Set to true to refresh the cached tags.
+     * @param   false  $force  [Optional] Set to true to refresh the cached commit data.
      *
      * @return array    Commit data.
      * @throws InvalidArgumentException When the defined From- or To-tag doesn't exist in the git repository.
@@ -271,9 +271,6 @@ class GitChangelog
         $commandResults      = [1, 1];
         $includeMergeCommits = $this->options['includeMergeCommits'] ? '' : '--no-merges';
         foreach ($gitTags as $tag) {
-            /** @noinspection PhpParamsInspection
-             *  False positive, @see https://youtrack.jetbrains.com/issue/WI-56952
-             */
             $rangeStart = next($gitTags);
             $tagRange   = $rangeStart !== false ? "$rangeStart..$tag" : "$tag^";
 
@@ -410,9 +407,12 @@ class GitChangelog
      *
      * Omit or set to '' or null to include the HEAD revision into the changelog.
      *
+     * Note: This method does not affect the contents of the pre-fetched tags.
+     *
      * @param   mixed  $tag  The newest tag to include.
      *
      * @throws InvalidArgumentException When the tag does not exist in the repository.
+     * @see GitChangelog::fetchTags()
      */
     public function setToTag($tag = null): void
     {
@@ -426,9 +426,12 @@ class GitChangelog
      *
      * Omit or set to null to include the oldest tag into the changelog.
      *
+     * Note: This method does not affect the contents of the pre-fetched tags.
+     *
      * @param   mixed  $tag  The oldest tag to include.
      *
      * @throws InvalidArgumentException When the tag does not exist in the repository.
+     * @see GitChangelog::fetchTags()
      */
     public function setFromTag($tag = null): void
     {
@@ -517,6 +520,8 @@ class GitChangelog
      * Alternatively you can set multiple options at once by passing a single argument as an array with option names
      * and values.
      *
+     * Note: This method does not affect the contents of the pre-fetched tags.
+     *
      * @param   mixed  $name   Name of option or array of option names and values.
      * @param   mixed  $value  [Optional] Value of option.
      *
@@ -524,6 +529,7 @@ class GitChangelog
      * @throws InvalidArgumentException If the option you're trying to set is invalid.
      * @throws InvalidArgumentException When setting option 'headTag' to an invalid value.
      * @see GitChangelog::$options
+     * @see GitChangelog::fetchTags()
      */
     public function setOptions($name, $value = null): void
     {
