@@ -78,7 +78,7 @@ use RuntimeException;
 class GitChangelog
 {
     /**
-     * @var string Path to local git repository. Set to null for repository at current folder.
+     * @var string Path to local git repository.
      */
     public $gitPath;
     /**
@@ -162,15 +162,20 @@ class GitChangelog
     /**
      * GitChangelog constructor.
      *
+     * All git tags are pre-fetched from the repository at the given path.
+     *
+     * @param   string  $gitPath  Path to the repository directory.
+     *
      * @throws Exception When the defined From- or To-tag doesn't exist in the git repository.
      */
-    public function __construct()
+    public function __construct(string $gitPath = './')
     {
+        $this->gitPath = $gitPath;
         $this->fetchTags();
     }
 
     /**
-     * Fetch all tags from the git repository.
+     * Fetch tags from the git repository.
      *
      * Note:
      * Re-calling this method will not overwrite the tags which where retrieved at an earlier call.
@@ -191,8 +196,7 @@ class GitChangelog
             return $this->gitTags;
         }
 
-        $gitPath = '--git-dir ';
-        $gitPath .= ($this->gitPath ?? './') . '.git';
+        $gitPath = "--git-dir {$this->gitPath}.git";
 
         // Get all git tags.
         $this->gitTags = [];
@@ -224,13 +228,17 @@ class GitChangelog
     /**
      * Fetch the commit data from the git repository.
      *
+     * The tags are re-fetched from the repository, honoring the properties GitChangelog::$fromTag,
+     * GitChangelog::$endTag and GitChangelog::options['tagOrderBy'].
+     * Afterwards, the commit data of the re-fetched tags is fetched from the repository.
+     *
      * Commit data is formatted as follows after it is processed:
      *
      * [
      *     Tag => [
-     *         'date'           => string,
+     *         'date'         => string,
      *         'uniqueTitles' => string[],
-     *         'hashes'         => string[]
+     *         'hashes'       => string[]
      * ]
      *
      * Note:
@@ -239,7 +247,7 @@ class GitChangelog
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      *
-     * @param   false  $force  [Optional] Set to true to refresh the cached tags.
+     * @param   false  $force  [Optional] Set to true to refresh the cached commit data.
      *
      * @return array    Commit data.
      * @throws InvalidArgumentException When the defined From- or To-tag doesn't exist in the git repository.
@@ -253,19 +261,16 @@ class GitChangelog
             return $this->commitData;
         }
 
-        $gitTags    = $this->fetchTags();
+        // Re-fetch tags because tag range and order can be altered after pre-fetch.
+        $gitTags    = $this->fetchTags(true);
         $commitData = [];
 
-        $gitPath = '--git-dir ';
-        $gitPath .= ($this->gitPath ?? './') . '.git';
+        $gitPath = "--git-dir {$this->gitPath}.git";
 
         // Get tag dates and commit titles from git log for each tag.
         $commandResults      = [1, 1];
         $includeMergeCommits = $this->options['includeMergeCommits'] ? '' : '--no-merges';
         foreach ($gitTags as $tag) {
-            /** @noinspection PhpParamsInspection
-             *  False positive, @see https://youtrack.jetbrains.com/issue/WI-56952
-             */
             $rangeStart = next($gitTags);
             $tagRange   = $rangeStart !== false ? "$rangeStart..$tag" : "$tag^";
 
@@ -282,12 +287,12 @@ class GitChangelog
                 $commitData[$tag]['hashes'],
                 $commandResults[1]
             );
-        }
 
-        if (array_sum($commandResults)) {
-            // @codeCoverageIgnoreStart
-            throw new RuntimeException('An error occurred while fetching the commit data from the repository.');
-            // @codeCoverageIgnoreEnd
+            if (array_sum($commandResults)) {
+                // @codeCoverageIgnoreStart
+                throw new RuntimeException('An error occurred while fetching the commit data from the repository.');
+                // @codeCoverageIgnoreEnd
+            }
         }
 
         // Cache commit data and process it.
@@ -402,9 +407,12 @@ class GitChangelog
      *
      * Omit or set to '' or null to include the HEAD revision into the changelog.
      *
+     * Note: This method does not affect the contents of the pre-fetched tags.
+     *
      * @param   mixed  $tag  The newest tag to include.
      *
      * @throws InvalidArgumentException When the tag does not exist in the repository.
+     * @see GitChangelog::fetchTags()
      */
     public function setToTag($tag = null): void
     {
@@ -418,9 +426,12 @@ class GitChangelog
      *
      * Omit or set to null to include the oldest tag into the changelog.
      *
+     * Note: This method does not affect the contents of the pre-fetched tags.
+     *
      * @param   mixed  $tag  The oldest tag to include.
      *
      * @throws InvalidArgumentException When the tag does not exist in the repository.
+     * @see GitChangelog::fetchTags()
      */
     public function setFromTag($tag = null): void
     {
@@ -509,6 +520,8 @@ class GitChangelog
      * Alternatively you can set multiple options at once by passing a single argument as an array with option names
      * and values.
      *
+     * Note: This method does not affect the contents of the pre-fetched tags.
+     *
      * @param   mixed  $name   Name of option or array of option names and values.
      * @param   mixed  $value  [Optional] Value of option.
      *
@@ -516,6 +529,7 @@ class GitChangelog
      * @throws InvalidArgumentException If the option you're trying to set is invalid.
      * @throws InvalidArgumentException When setting option 'headTag' to an invalid value.
      * @see GitChangelog::$options
+     * @see GitChangelog::fetchTags()
      */
     public function setOptions($name, $value = null): void
     {
