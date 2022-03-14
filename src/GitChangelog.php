@@ -287,12 +287,12 @@ class GitChangelog
                 $commitData[$tag]['hashes'],
                 $commandResults[1]
             );
-        }
 
-        if (array_sum($commandResults)) {
-            // @codeCoverageIgnoreStart
-            throw new RuntimeException('An error occurred while fetching the commit data from the repository.');
-            // @codeCoverageIgnoreEnd
+            if (array_sum($commandResults)) {
+                // @codeCoverageIgnoreStart
+                throw new RuntimeException('An error occurred while fetching the commit data from the repository.');
+                // @codeCoverageIgnoreEnd
+            }
         }
 
         // Cache commit data and process it.
