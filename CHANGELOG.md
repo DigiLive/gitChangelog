@@ -5,6 +5,7 @@
 * Add force fetching tags when fetching commit data ([521d2e4](https://github.com/DigiLive/gitChangelog/commit/521d2e4))
 * Add setting gitPath property to constructor ([60fa232](https://github.com/DigiLive/gitChangelog/commit/60fa232))
 * Add test for fetching duplicate tags ([5377c20](https://github.com/DigiLive/gitChangelog/commit/5377c20))
+* Fix [#14](https://github.com/DigiLive/gitChangelog/issues/14) - Ambiguous argument 'tag^' ([43e1f4d](https://github.com/DigiLive/gitChangelog/commit/43e1f4d))
 * Fix setting wrong gitPath ([871f440](https://github.com/DigiLive/gitChangelog/commit/871f440))
 * Optimize fetching commit data ([15543cb](https://github.com/DigiLive/gitChangelog/commit/15543cb))
 
