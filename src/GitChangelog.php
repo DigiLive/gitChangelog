@@ -272,7 +272,7 @@ class GitChangelog
         $includeMergeCommits = $this->options['includeMergeCommits'] ? '' : '--no-merges';
         foreach ($gitTags as $tag) {
             $rangeStart = next($gitTags);
-            $tagRange   = $rangeStart !== false ? "$rangeStart..$tag" : "$tag^";
+            $tagRange   = $rangeStart !== false ? "$rangeStart..$tag" : "$tag";
 
             $commitData[$tag]['date'] =
                 shell_exec("git $gitPath log -1 --pretty=format:%ad --date=short $tag") ?? 'Error';
