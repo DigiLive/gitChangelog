@@ -71,6 +71,15 @@ class MarkDown extends GitChangelog implements RendererInterface
      *             {issue} is replaced by the issue number.
      */
     public $issueUrl;
+    /**
+     * @var int Maximum length of the commit titles. Longer titles are word-wrapped, so they won't exceed this maximum.
+     */
+    public $titleLength = 80;
+
+    /**
+     * @var array Contains the urls of the reference links in the document.
+     */
+    private $links = [];
 
     /**
      * Generate the changelog.
@@ -82,7 +91,6 @@ class MarkDown extends GitChangelog implements RendererInterface
     public function build(): void
     {
         $logContent = "# {$this->options['logHeader']}\n";
-
         $commitData = $this->fetchCommitData();
 
         if (!$commitData) {
@@ -97,7 +105,7 @@ class MarkDown extends GitChangelog implements RendererInterface
 
         foreach ($commitData as $tag => $data) {
             $logContent .= "\n";
-            // Add tag header and date.
+            // Add tag header and date to log.
             $tagData = [$tag, $data['date']];
             if ($tag === '') {
                 $tagData = [$this->options['headTagName'], $this->options['headTagDate']];
@@ -107,8 +115,9 @@ class MarkDown extends GitChangelog implements RendererInterface
 
             // No titles present for this tag.
             if (!$data['titles']) {
-                $title      = $this->options['noChangesMessage'];
-                $logContent .= rtrim(str_replace(['{title}', '{hashes}'], [$title, ''], $this->formatTitle));
+                $logContent .= rtrim(
+                    str_replace(['{title}', '{hashes}'], [$this->options['noChangesMessage'], ''], $this->formatTitle)
+                );
                 $logContent .= "\n";
                 continue;
             }
@@ -116,24 +125,37 @@ class MarkDown extends GitChangelog implements RendererInterface
             // Sort commit titles.
             Utilities::natSort($data['titles'], $this->options['titleOrder']);
 
-            // Add commit titles.
+            // Add commit titles to log.
+            $tagContent = '';
             foreach ($data['titles'] as $titleKey => &$title) {
                 if ($this->issueUrl !== null) {
-                    $title = preg_replace(
-                        '/#([0-9]+)/',
-                        '[#$1](' . str_replace('{issue}', '$1', $this->issueUrl) . ')',
-                        $title
+                    $title = preg_replace_callback(
+                        '/#(\d+)/',
+                        function ($matches) {
+                            $this->links[] = str_replace('{issue}', $matches[1], $this->issueUrl);
+
+                            return "[$matches[0]][" . (count($this->links) - 1) . ']';
+                        },
+                        $title,
                     );
                 }
-                $logContent .= rtrim(
+
+                $tagContent .= rtrim(
                     str_replace(
                         ['{title}', '{hashes}'],
                         [$title, $this->formatHashes($data['hashes'][$titleKey])],
                         $this->formatTitle
                     )
-                );
-                $logContent .= "\n";
+                ) . "\n";
             }
+
+            $logContent .= $this->wordWrap($tagContent);
+        }
+
+        // Render links.
+        $logContent .= "\n";
+        foreach ($this->links as $index => $link) {
+            $logContent .= "[$index]:$link\n";
         }
 
         $this->changelog = $logContent;
@@ -144,7 +166,7 @@ class MarkDown extends GitChangelog implements RendererInterface
      *
      * Each hash is formatted into a link as defined by property commitUrl.
      * After formatting, all hashes are concatenated to a single line, comma separated.
-     * Finally this line is formatted as defined by property formatHashes.
+     * Finally, this line is formatted as defined by property formatHashes.
      *
      * @param   array  $hashes  Hashes to format
      *
@@ -160,7 +182,8 @@ class MarkDown extends GitChangelog implements RendererInterface
 
         if ($this->commitUrl !== null) {
             foreach ($hashes as &$hash) {
-                $hash = "[$hash](" . str_replace('{hash}', $hash, $this->commitUrl) . ')';
+                $this->links[] = str_replace('{hash}', $hash, $this->commitUrl);
+                $hash          = "[$hash][" . (count($this->links) - 1) . ']';
             }
             unset($hash);
         }
@@ -168,5 +191,22 @@ class MarkDown extends GitChangelog implements RendererInterface
         $hashes = implode(', ', $hashes);
 
         return "($hashes)";
+    }
+
+    /**
+     * Word-wrap a string to a maximum of chars.
+     *
+     * @param   string  $content  The tring to wrap.
+     *
+     * @return string The wrapped string.
+     */
+    private function wordWrap(string $content): string
+    {
+        $wrappedContent = wordwrap($content, $this->titleLength);
+        if ($wrappedContent != $content) {
+            $wrappedContent = ltrim(preg_replace('/^(\d+\.|[-*+] )/m', "\n$1", $wrappedContent));
+        }
+
+        return $wrappedContent;
     }
 }
