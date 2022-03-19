@@ -120,7 +120,7 @@ class MarkDown extends GitChangelog implements RendererInterface
             foreach ($data['titles'] as $titleKey => &$title) {
                 if ($this->issueUrl !== null) {
                     $title = preg_replace(
-                        '/#([0-9]+)/',
+                        '/#(\d+)/',
                         '[#$1](' . str_replace('{issue}', '$1', $this->issueUrl) . ')',
                         $title
                     );
@@ -144,7 +144,7 @@ class MarkDown extends GitChangelog implements RendererInterface
      *
      * Each hash is formatted into a link as defined by property commitUrl.
      * After formatting, all hashes are concatenated to a single line, comma separated.
-     * Finally this line is formatted as defined by property formatHashes.
+     * Finally, this line is formatted as defined by property formatHashes.
      *
      * @param   array  $hashes  Hashes to format
      *

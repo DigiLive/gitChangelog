@@ -49,7 +49,6 @@ use PHPUnit\Framework\TestCase;
  */
 class UtilitiesTest extends TestCase
 {
-
     public function testArrayStrPos0()
     {
         $this->assertTrue(Utilities::arrayStrPos0('Hello World', 'Hello'));
