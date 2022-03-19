@@ -85,9 +85,6 @@ class HtmlTest extends TestCase
                 '<h1>Changelog</h1><h2>A (B)</h2><ul><li><a href="<Issue>1</Issue>">#1</a> </li></ul>',
             ];
 
-        /** @noinspection PhpParamsInspection
-         *  False positive, @see https://youtrack.jetbrains.com/issue/WI-56952
-         */
         next($testValues);
         foreach ($testValues as $key => $value) {
             $this->setPrivateProperty($changeLog, 'commitData', $value);

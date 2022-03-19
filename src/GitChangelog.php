@@ -196,7 +196,7 @@ class GitChangelog
             return $this->gitTags;
         }
 
-        $gitPath = "--git-dir {$this->gitPath}.git";
+        $gitPath = "--git-dir $this->gitPath.git";
 
         // Get all git tags.
         $this->gitTags = [];
@@ -265,7 +265,7 @@ class GitChangelog
         $gitTags    = $this->fetchTags(true);
         $commitData = [];
 
-        $gitPath = "--git-dir {$this->gitPath}.git";
+        $gitPath = "--git-dir $this->gitPath.git";
 
         // Get tag dates and commit titles from git log for each tag.
         $commandResults      = [1, 1];

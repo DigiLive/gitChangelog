@@ -58,7 +58,6 @@ use stdClass;
  */
 class GitChangelogTest extends TestCase
 {
-
     /**
      * set up test environment
      */
@@ -159,7 +158,7 @@ class GitChangelogTest extends TestCase
         $changeLog->setLabels();
 
         // Test with array parameter.
-        $changeLog->setLabels(...['label1', 'label2']);
+        $changeLog->setLabels('label1', 'label2');
         self::assertEquals(['label1', 'label2'], $this->getPrivateProperty($changeLog, 'labels'));
     }
 
@@ -190,6 +189,7 @@ class GitChangelogTest extends TestCase
         if (version_compare(PHP_VERSION, '8.0.0') >= 0) {
             $this->expectWarning();  // PHP version ^8
         }
+        /** @noinspection PhpParamsInspection */
         $changeLog->setLabels([]);
     }
 
@@ -198,6 +198,7 @@ class GitChangelogTest extends TestCase
         $changeLog = new GitChangelog();
 
         $this->expectException('Error');
+        /** @noinspection PhpParamsInspection */
         $changeLog->setLabels(new stdClass());
     }
 
@@ -280,7 +281,7 @@ class GitChangelogTest extends TestCase
         $this->assertEquals($expectedLabels, $this->getPrivateProperty($changeLog, 'labels'));
 
         // Test with array parameter.
-        $changeLog->addLabel(...['label1', 'label2']);
+        $changeLog->addLabel('label1', 'label2');
         $this->assertEquals($expectedLabels, $this->getPrivateProperty($changeLog, 'labels'));
     }
 

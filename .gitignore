@@ -114,3 +114,6 @@ modules.xml
 /build/
 
 # End of https://www.toptal.com/developers/gitignore/api/phpstorm+all,composer,phpunit
+/node_modules/
+/package-lock.json
+/updateChangelog.php
