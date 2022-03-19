@@ -92,6 +92,7 @@ class MarkDown extends GitChangelog implements RendererInterface
     {
         $logContent = "# {$this->options['logHeader']}\n";
         $commitData = $this->fetchCommitData();
+        $this->links = [];
 
         if (!$commitData) {
             $this->changelog = "$logContent\n{$this->options['noChangesMessage']}\n";
