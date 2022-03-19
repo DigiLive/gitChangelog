@@ -71,17 +71,17 @@ class MarkDownTest extends TestCase
                 //No tags
                 "# Changelog\n\nNo changes.\n",
                 // Head Revision included.
-                "# Changelog\n\n## Upcoming changes (Undetermined)\n\n* C (E)\n* D (F)\n",
+                "# Changelog\n\n## Upcoming changes (Undetermined)\n\n* C (E)\n* D (F)\n\n",
                 // Dummy tag, no commits.
-                "# Changelog\n\n## A (B)\n\n* No changes.\n",
+                "# Changelog\n\n## A (B)\n\n* No changes.\n\n",
                 // Dummy tag and commits.
-                "# Changelog\n\n## A (B)\n\n* C (E, F)\n* D (G)\n",
+                "# Changelog\n\n## A (B)\n\n* C (E, F)\n* D (G)\n\n",
                 // Dummy tag and commits to be formatted, but they're not.
-                "# Changelog\n\n## A (B)\n\n* #1 (0123456)\n",
+                "# Changelog\n\n## A (B)\n\n* #1 (0123456)\n\n",
                 // Dummy tag and commits to be formatted, and they are.
-                "# Changelog\n\n## A (B)\n\n* [#1](<Issue>1</Issue>) ([0123456](<Commit>0123456</Commit>))\n",
+                "# Changelog\n\n## A (B)\n\n* [#1][0] ([0123456][1])\n\n[0]:<Issue>1</Issue>\n[1]:<Commit>0123456</Commit>\n",
                 // Dummy tag and commits to be formatted, but hashes are disabled.
-                "# Changelog\n\n## A (B)\n\n* [#1](<Issue>1</Issue>)\n",
+                "# Changelog\n\n## A (B)\n\n* [#1][0]\n\n[0]:<Issue>1</Issue>\n",
             ];
 
         foreach ($testValues as $key => $value) {
@@ -140,11 +140,11 @@ class MarkDownTest extends TestCase
                 //No tags
                 "# Changelog\n\nNo changes.\n",
                 // Head Revision included.
-                "# Changelog\n\n## Upcoming changes (Undetermined)\n\n* D (F)\n* C (E)\n",
+                "# Changelog\n\n## Upcoming changes (Undetermined)\n\n* D (F)\n* C (E)\n\n",
                 // Dummy tag, no commits.
-                "# Changelog\n\n## A (B)\n\n* No changes.\n",
+                "# Changelog\n\n## A (B)\n\n* No changes.\n\n",
                 // Dummy tag and commits.
-                "# Changelog\n\n## A (B)\n\n* D (G)\n* C (E, F)\n",
+                "# Changelog\n\n## A (B)\n\n* D (G)\n* C (E, F)\n\n",
             ];
 
         foreach ($testValues as $key => $value) {
