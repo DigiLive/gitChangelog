@@ -81,7 +81,7 @@ with [Composer](http://getcomposer.org).
 
 Set the version constraint to a value which suits you best.  
 Alternatively you can download the latest release
-from [Github](https://github.com/DigiLive/gitChangelog/releases).
+from [GitHub](https://github.com/DigiLive/gitChangelog/releases).
 
 ## Minimal Example use
 

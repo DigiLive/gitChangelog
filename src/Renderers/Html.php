@@ -107,7 +107,7 @@ class Html extends GitChangelog implements RendererInterface
             foreach ($data['titles'] as $titleKey => $title) {
                 if ($this->issueUrl !== null) {
                     $title = preg_replace(
-                        '/#([0-9]+)/',
+                        '/#(\d+)/',
                         '<a href="' . str_replace('{issue}', '$1', $this->issueUrl) . '">$0</a>',
                         $title
                     );
