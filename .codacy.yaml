@@ -1,0 +1,4 @@
+---
+engines:
+  phpcs:
+    php_version: 7.3
