@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * BSD 3-Clause License
  *
@@ -35,11 +33,9 @@ declare(strict_types=1);
  *
  */
 
-namespace DigiLive\GitChangelog;
+declare(strict_types=1);
 
-use Exception;
-use InvalidArgumentException;
-use RuntimeException;
+namespace DigiLive\GitChangelog;
 
 /**
  * Class GitChangelog
@@ -72,8 +68,6 @@ use RuntimeException;
  * Document     Refactor of documentation; E.g., help files.
  *
  * Title lines must never contain (and / or start with) anything else.
- *
- * @package DigiLive\GitChangelog
  */
 class GitChangelog
 {
@@ -146,17 +140,17 @@ class GitChangelog
      *               To disable this filtering, remove all labels from this property.
      */
     private $labels = [
-//        'Add',          // Create a capability e.g. feature, test, dependency.
-//        'Cut',          // Remove a capability e.g. feature, test, dependency.
-//        'Fix',          // Fix an issue e.g. bug, typo, accident, misstatement.
-//        'Bump',         // Increase the version of something e.g. dependency.
-//        'Make',         // Change the build process, or tooling, or infra.
-//        'Start',        // Begin doing something; e.g. create a feature flag.
-//        'Stop',         // End doing something; e.g. remove a feature flag.
-//        'Refactor',     // A code change that MUST be just a refactoring.
-//        'Reformat',     // Refactor of formatting, e.g. omit whitespace.
-//        'Optimize',     // Refactor of performance, e.g. speed up code.
-//        'Document',     // Refactor of documentation, e.g. help files.
+        // 'Add',          // Create a capability e.g. feature, test, dependency.
+        // 'Cut',          // Remove a capability e.g. feature, test, dependency.
+        // 'Fix',          // Fix an issue e.g. bug, typo, accident, misstatement.
+        // 'Bump',         // Increase the version of something e.g. dependency.
+        // 'Make',         // Change the build process, or tooling, or infra.
+        // 'Start',        // Begin doing something; e.g. create a feature flag.
+        // 'Stop',         // End doing something; e.g. remove a feature flag.
+        // 'Refactor',     // A code change that MUST be just a refactoring.
+        // 'Reformat',     // Refactor of formatting, e.g. omit whitespace.
+        // 'Optimize',     // Refactor of performance, e.g. speed up code.
+        // 'Document',     // Refactor of documentation, e.g. help files.
     ];
 
     /**
@@ -166,7 +160,7 @@ class GitChangelog
      *
      * @param   string  $gitPath  Path to the repository directory.
      *
-     * @throws Exception When the defined From- or To-tag doesn't exist in the git repository.
+     * @throws \Exception When the defined From- or To-tag doesn't exist in the git repository.
      */
     public function __construct(string $gitPath = './')
     {
@@ -186,13 +180,13 @@ class GitChangelog
      * @param   bool  $force  [Optional] Set to true to refresh the cached tags.
      *
      * @return array The cached tags.
-     * @throws InvalidArgumentException When the defined From- or To-tag doesn't exist in the git repository.
-     * @throws RuntimeException When executing the git command fails.
+     * @throws \InvalidArgumentException When the defined From- or To-tag doesn't exist in the git repository.
+     * @throws \RuntimeException When executing the git command fails.
      */
     public function fetchTags(bool $force = false): array
     {
         // Return cached results unless forced to update.
-        if (!$force && $this->gitTags !== null) {
+        if (!$force && null !== $this->gitTags) {
             return $this->gitTags;
         }
 
@@ -202,9 +196,9 @@ class GitChangelog
         $this->gitTags = [];
         $commandResult = 1;
         exec("git $gitPath tag --sort=-{$this->options['tagOrderBy']}", $this->gitTags, $commandResult);
-        if ($commandResult !== 0) {
+        if (0 !== $commandResult) {
             // @codeCoverageIgnoreStart
-            throw new RuntimeException('An error occurred while fetching the tags from the repository!');
+            throw new \RuntimeException('An error occurred while fetching the tags from the repository!');
             // @codeCoverageIgnoreEnd
         }
 
@@ -215,7 +209,7 @@ class GitChangelog
 
         $toKey  = Utilities::arraySearch($this->toTag, $this->gitTags);
         $length = null;
-        if ($this->fromTag !== null) {
+        if (null !== $this->fromTag) {
             $length = Utilities::arraySearch($this->fromTag, $this->gitTags) - $toKey + 1;
         }
 
@@ -250,8 +244,8 @@ class GitChangelog
      * @param   false  $force  [Optional] Set to true to refresh the cached commit data.
      *
      * @return array    Commit data.
-     * @throws InvalidArgumentException When the defined From- or To-tag doesn't exist in the git repository.
-     * @throws RuntimeException When executing a git command fails.
+     * @throws \InvalidArgumentException When the defined From- or To-tag doesn't exist in the git repository.
+     * @throws \RuntimeException When executing a git command fails.
      * @see GitChangelog::processCommitData()
      */
     public function fetchCommitData(bool $force = false): array
@@ -272,7 +266,7 @@ class GitChangelog
         $includeMergeCommits = $this->options['includeMergeCommits'] ? '' : '--no-merges';
         foreach ($gitTags as $tag) {
             $rangeStart = next($gitTags);
-            $tagRange   = $rangeStart !== false ? "$rangeStart..$tag" : "$tag";
+            $tagRange   = false !== $rangeStart ? "$rangeStart..$tag" : "$tag";
 
             $commitData[$tag]['date'] =
                 shell_exec("git $gitPath log -1 --pretty=format:%ad --date=short $tag") ?? 'Error';
@@ -290,7 +284,7 @@ class GitChangelog
 
             if (array_sum($commandResults)) {
                 // @codeCoverageIgnoreStart
-                throw new RuntimeException('An error occurred while fetching the commit data from the repository.');
+                throw new \RuntimeException('An error occurred while fetching the commit data from the repository.');
                 // @codeCoverageIgnoreEnd
             }
         }
@@ -318,10 +312,8 @@ class GitChangelog
     {
         foreach ($this->commitData as $tag => &$data) {
             // Merge duplicate titles per tag.
-            /**
-             * @noinspection PhpParameterByRefIsNotUsedAsReferenceInspection
-             * @see          https://youtrack.jetbrains.com/issue/WI-56632
-             */
+            /* @noinspection PhpParameterByRefIsNotUsedAsReferenceInspection */
+            // https://youtrack.jetbrains.com/issue/WI-56632
             foreach ($data['titles'] as $titleKey => &$title) {
                 // Convert hash element into an array.
                 $data['hashes'][$titleKey] = [$data['hashes'][$titleKey]];
@@ -338,7 +330,7 @@ class GitChangelog
                 }
 
                 // Remove titles and hashes without specified labels.
-                if ($this->labels && Utilities::arrayStrPos0($title, $this->labels) === false) {
+                if ($this->labels && false === Utilities::arrayStrPos0($title, $this->labels)) {
                     unset(
                         $this->commitData[$tag]['titles'][$titleKey],
                         $this->commitData[$tag]['hashes'][$titleKey]
@@ -358,13 +350,13 @@ class GitChangelog
      *
      * @param   string  $filePath  Path to file to save the changelog.
      *
-     * @throws RuntimeException When writing of the file fails.
+     * @throws \RuntimeException When writing of the file fails.
      * @see GitChangelog::$baseContent
      */
     public function save(string $filePath): void
     {
         if (@file_put_contents($filePath, $this->changelog . $this->baseContent) === false) {
-            throw new RuntimeException('Unable to write to file!');
+            throw new \RuntimeException('Unable to write to file!');
         }
     }
 
@@ -399,7 +391,7 @@ class GitChangelog
     public function setBaseContent(string $content): void
     {
         $fileContent       = @file_get_contents($content);
-        $this->baseContent = $fileContent !== false ? $fileContent : $content;
+        $this->baseContent = false !== $fileContent ? $fileContent : $content;
     }
 
     /**
@@ -411,7 +403,7 @@ class GitChangelog
      *
      * @param   mixed  $tag  The newest tag to include.
      *
-     * @throws InvalidArgumentException When the tag does not exist in the repository.
+     * @throws \InvalidArgumentException When the tag does not exist in the repository.
      * @see GitChangelog::fetchTags()
      */
     public function setToTag($tag = null): void
@@ -430,12 +422,12 @@ class GitChangelog
      *
      * @param   mixed  $tag  The oldest tag to include.
      *
-     * @throws InvalidArgumentException When the tag does not exist in the repository.
+     * @throws \InvalidArgumentException When the tag does not exist in the repository.
      * @see GitChangelog::fetchTags()
      */
     public function setFromTag($tag = null): void
     {
-        if ($tag !== null) {
+        if (null !== $tag) {
             Utilities::arraySearch($tag, $this->gitTags);
         }
 
@@ -459,10 +451,11 @@ class GitChangelog
             try {
                 $key = Utilities::arraySearch($label, $this->labels);
                 unset($this->labels[$key]);
-            } catch (InvalidArgumentException $e) {
+            } catch (\InvalidArgumentException $e) {
                 continue;
             }
         }
+
         $this->labels = array_values($this->labels);
     }
 
@@ -525,9 +518,9 @@ class GitChangelog
      * @param   mixed  $name   Name of option or array of option names and values.
      * @param   mixed  $value  [Optional] Value of option.
      *
-     * @throws Exception If option 'headTag' can't be validated.
-     * @throws InvalidArgumentException If the option you're trying to set is invalid.
-     * @throws InvalidArgumentException When setting option 'headTag' to an invalid value.
+     * @throws \Exception If option 'headTag' can't be validated.
+     * @throws \InvalidArgumentException If the option you're trying to set is invalid.
+     * @throws \InvalidArgumentException When setting option 'headTag' to an invalid value.
      * @see GitChangelog::$options
      * @see GitChangelog::fetchTags()
      */
@@ -539,11 +532,11 @@ class GitChangelog
 
         foreach ($name as $option => $value) {
             if (!array_key_exists($option, $this->options)) {
-                throw new InvalidArgumentException("Attempt to set an invalid option: $option!");
+                throw new \InvalidArgumentException("Attempt to set an invalid option: $option!");
             }
 
-            if ($option == 'headTagName' && in_array($value, $this->fetchTags())) {
-                throw new InvalidArgumentException("Attempt to set $option to an already existing tag value!");
+            if ('headTagName' == $option && in_array($value, $this->fetchTags())) {
+                throw new \InvalidArgumentException("Attempt to set $option to an already existing tag value!");
             }
 
             $this->options[$option] = $value;

@@ -33,19 +33,18 @@
  *
  */
 
+declare(strict_types=1);
+
 namespace DigiLive\GitChangelog\Renderers;
 
 use DigiLive\GitChangelog\GitChangelog;
 use DigiLive\GitChangelog\Utilities;
-use Exception;
 
 /**
  * Class MarkDown
  *
  * Renderer for GitChangelog.
  * The rendered changelog is formatted in markdown.
- *
- * @package DigiLive\GitChangelog\Renderers
  */
 class MarkDown extends GitChangelog implements RendererInterface
 {
@@ -90,7 +89,7 @@ class MarkDown extends GitChangelog implements RendererInterface
      *
      * The generated changelog will be stored into a class property.
      *
-     * @throws Exception When the defined From- or To-tag doesn't exist in the git repository.
+     * @throws \Exception When the defined From- or To-tag doesn't exist in the git repository.
      */
     public function build(): void
     {
@@ -113,7 +112,7 @@ class MarkDown extends GitChangelog implements RendererInterface
             $logContent .= "\n";
             // Add tag header and date to log.
             $tagData = [$tag, $data['date']];
-            if ($tag === '') {
+            if ('' === $tag) {
                 $tagData = [$this->options['headTagName'], $this->options['headTagDate']];
             }
 
@@ -134,7 +133,9 @@ class MarkDown extends GitChangelog implements RendererInterface
             // Add commit titles to log.
             $tagContent = '';
             foreach ($data['titles'] as $titleKey => &$title) {
-                if ($this->issueUrl !== null) {
+                if (null !== $this->issueUrl) {
+                    // phpcs:disable Security.BadFunctions.EasyRFI
+                    // https://stackoverflow.com/questions/3115559/exploitable-php-functions
                     $title = preg_replace_callback(
                         '/#(\d+)/',
                         function ($matches) {
@@ -144,6 +145,7 @@ class MarkDown extends GitChangelog implements RendererInterface
                         },
                         $title
                     );
+                    // phpcs:enable
                 }
 
                 $tagContent .= rtrim(
@@ -186,11 +188,12 @@ class MarkDown extends GitChangelog implements RendererInterface
             return '';
         }
 
-        if ($this->commitUrl !== null) {
+        if (null !== $this->commitUrl) {
             foreach ($hashes as &$hash) {
                 $this->links[] = str_replace('{hash}', $hash, $this->commitUrl);
                 $hash          = "[$hash][" . $this->linkCount++ . ']';
             }
+
             unset($hash);
         }
 

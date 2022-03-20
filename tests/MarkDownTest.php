@@ -49,6 +49,12 @@ use ReflectionException;
  */
 class MarkDownTest extends TestCase
 {
+    /**
+     * Test if a changelog is build with the repository tags in ascending order.
+     *
+     * @return void
+     * @throws \ReflectionException When setting private properties fail.
+     */
     public function testBuildAscendingOrders()
     {
         $changeLog = new MarkDown();
@@ -79,9 +85,9 @@ class MarkDownTest extends TestCase
                 // Dummy tag and commits to be formatted, but they're not.
                 "# Changelog\n\n## A (B)\n\n* #1 (0123456)\n\n",
                 // Dummy tag and commits to be formatted, and they are.
-                "# Changelog\n\n## A (B)\n\n* [#1][0] ([0123456][1])\n\n[0]:<Issue>1</Issue>\n[1]:<Commit>0123456</Commit>\n",
+                "# Changelog\n\n## A (B)\n\n* [#1][0] ([0123456][1])\n\n[0]:<i>1</i>\n[1]:<c>0123456</c>\n",
                 // Dummy tag and commits to be formatted, but hashes are disabled.
-                "# Changelog\n\n## A (B)\n\n* [#1][0]\n\n[0]:<Issue>1</Issue>\n",
+                "# Changelog\n\n## A (B)\n\n* [#1][0]\n\n[0]:<i>1</i>\n",
             ];
 
         foreach ($testValues as $key => $value) {
@@ -91,8 +97,8 @@ class MarkDownTest extends TestCase
         }
 
         // Test formatting of issues and hashes.
-        $changeLog->issueUrl  = '<Issue>{issue}</Issue>';
-        $changeLog->commitUrl = '<Commit>{hash}</Commit>';
+        $changeLog->issueUrl  = '<i>{issue}</i>';
+        $changeLog->commitUrl = '<c>{hash}</c>';
         $changeLog->build();
         $this->assertEquals($expectedValues[5], $changeLog->get());
         // Disable hashes
@@ -120,6 +126,12 @@ class MarkDownTest extends TestCase
         $reflectionProperty->setValue($object, $value);
     }
 
+    /**
+     * Test if a changelog is build with the repository tags in descending order.
+     *
+     * @return void
+     * @throws \ReflectionException When setting private properties fail.
+     */
     public function testBuildDescendingOrders()
     {
         $changeLog = new MarkDown();

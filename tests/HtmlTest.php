@@ -49,6 +49,12 @@ use ReflectionException;
  */
 class HtmlTest extends TestCase
 {
+    /**
+     * Test if a changelog is build with the repository tags in ascending order.
+     *
+     * @return void
+     * @throws \ReflectionException When setting private properties fail.
+     */
     public function testBuildAscendingOrders()
     {
         $changeLog = new Html();
@@ -108,7 +114,7 @@ class HtmlTest extends TestCase
      *
      * @param   object  $object    - Instance in which the private or protected value is being modified.
      * @param   string  $property  - Property of instance which is being modified.
-     * @param           $value     - New value of the property which is being modified.
+     * @param   mixed  $value     - New value of the property which is being modified.
      *
      * @return void
      * @throws ReflectionException If no property exists by that name.
@@ -122,6 +128,12 @@ class HtmlTest extends TestCase
         $reflectionProperty->setValue($object, $value);
     }
 
+    /**
+     * Test if a changelog is build with the repository tags in ascending order.
+     *
+     * @return void
+     * @throws \ReflectionException When setting private properties fail.
+     */
     public function testBuildDescendingOrders()
     {
         $changeLog = new Html();

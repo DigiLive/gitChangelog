@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * BSD 3-Clause License
  *
@@ -35,16 +33,14 @@ declare(strict_types=1);
  *
  */
 
-namespace DigiLive\GitChangelog;
+declare(strict_types=1);
 
-use InvalidArgumentException;
+namespace DigiLive\GitChangelog;
 
 /**
  * Class Utilities
  *
  * This class contains supportive methods to help keeping the complexity of calling code low.
- *
- * @package DigiLive\GitChangelog
  */
 class Utilities
 {
@@ -88,9 +84,10 @@ class Utilities
         if (!is_array($needles)) {
             $needles = [$needles];
         }
+
         foreach ($needles as $needle) {
             $haystack = strtolower($haystack);
-            if (stripos($haystack, $needle, $offset) === 0) {
+            if (0 === stripos($haystack, $needle, $offset)) {
                 return true;
             }
         }
@@ -113,13 +110,13 @@ class Utilities
      *             If needle is found in haystack more than once, the first matching key is returned.
      *             To return the keys for all matching values, use array_keys with the optional search_value parameter
      *             instead.
-     * @throws InvalidArgumentException If the value is not found in array.
+     * @throws \InvalidArgumentException If the value is not found in array.
      */
     public static function arraySearch($value, array $array, bool $strict = false): int
     {
         $key = array_search($value, $array, $strict);
-        if ($key === false) {
-            throw new InvalidArgumentException("'$value' does not exist in array!");
+        if (false === $key) {
+            throw new \InvalidArgumentException("'$value' does not exist in array!");
         }
 
         return $key;

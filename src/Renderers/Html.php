@@ -33,19 +33,18 @@
  *
  */
 
+declare(strict_types=1);
+
 namespace DigiLive\GitChangelog\Renderers;
 
 use DigiLive\GitChangelog\GitChangelog;
 use DigiLive\GitChangelog\Utilities;
-use Exception;
 
 /**
  * Class Html
  *
  * Renderer for GitChangelog.
  * The rendered changelog is formatted in markdown.
- *
- * @package DigiLive\GitChangelog\Renderers
  */
 class Html extends GitChangelog implements RendererInterface
 {
@@ -67,7 +66,7 @@ class Html extends GitChangelog implements RendererInterface
      *
      * The generated changelog will be stored into a class property.
      *
-     * @throws Exception When the defined From- or To-tag doesn't exist in the git repository.
+     * @throws \Exception When the defined From- or To-tag doesn't exist in the git repository.
      */
     public function build(): void
     {
@@ -87,7 +86,7 @@ class Html extends GitChangelog implements RendererInterface
 
         foreach ($commitData as $tag => $data) {
             // Add tag header and date.
-            if ($tag === '') {
+            if ('' === $tag) {
                 $tag          = $this->options['headTagName'];
                 $data['date'] = $this->options['headTagDate'];
             }
@@ -112,6 +111,7 @@ class Html extends GitChangelog implements RendererInterface
                         $title
                     );
                 }
+
                 $logContent .= "<li>$title " . $this->formatHashes($data['hashes'][$titleKey]) . '</li>';
             }
 
@@ -138,10 +138,11 @@ class Html extends GitChangelog implements RendererInterface
             return '';
         }
 
-        if ($this->commitUrl !== null) {
+        if (null !== $this->commitUrl) {
             foreach ($hashes as &$hash) {
                 $hash = '<a href="' . str_replace('{hash}', $hash, $this->commitUrl) . "\">$hash</a>";
             }
+
             unset($hash);
         }
 

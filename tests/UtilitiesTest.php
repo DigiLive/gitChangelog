@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * BSD 3-Clause License
  *
@@ -34,6 +32,8 @@ declare(strict_types=1);
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
+declare(strict_types=1);
 
 namespace DigiLive\GitChangelog\Tests;
 

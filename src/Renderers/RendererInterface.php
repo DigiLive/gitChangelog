@@ -33,9 +33,9 @@
  *
  */
 
-namespace DigiLive\GitChangelog\Renderers;
+declare(strict_types=1);
 
-use DigiLive\GitChangelog\GitChangelog;
+namespace DigiLive\GitChangelog\Renderers;
 
 /**
  * Interface RendererInterface
@@ -44,8 +44,6 @@ use DigiLive\GitChangelog\GitChangelog;
  * The custom renderer is expected to extend GitChangelog and implement this interface.
  *
  * E.g. `class CustomRenderer extends GitChangelog implements RendererInterface`
- *
- * @package DigiLive\GitChangelog\Renderers
  */
 interface RendererInterface
 {
