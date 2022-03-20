@@ -77,9 +77,13 @@ class MarkDown extends GitChangelog implements RendererInterface
     public $titleLength = 80;
 
     /**
-     * @var array Contains the urls of the reference links in the document.
+     * @var array Urls of the reference links currently in the changelog.
      */
     private $links = [];
+    /**
+     * @var int Current amount of reference links in the changelog.
+     */
+    private $linkCount;
 
     /**
      * Generate the changelog.
@@ -90,9 +94,10 @@ class MarkDown extends GitChangelog implements RendererInterface
      */
     public function build(): void
     {
-        $logContent = "# {$this->options['logHeader']}\n";
-        $commitData = $this->fetchCommitData();
-        $this->links = [];
+        $logContent      = "# {$this->options['logHeader']}\n";
+        $commitData      = $this->fetchCommitData();
+        $this->links     = [];
+        $this->linkCount = 0;
 
         if (!$commitData) {
             $this->changelog = "$logContent\n{$this->options['noChangesMessage']}\n";
@@ -135,9 +140,9 @@ class MarkDown extends GitChangelog implements RendererInterface
                         function ($matches) {
                             $this->links[] = str_replace('{issue}', $matches[1], $this->issueUrl);
 
-                            return "[$matches[0]][" . (count($this->links) - 1) . ']';
+                            return "[$matches[0]][" . $this->linkCount++ . ']';
                         },
-                        $title,
+                        $title
                     );
                 }
 
@@ -184,7 +189,7 @@ class MarkDown extends GitChangelog implements RendererInterface
         if ($this->commitUrl !== null) {
             foreach ($hashes as &$hash) {
                 $this->links[] = str_replace('{hash}', $hash, $this->commitUrl);
-                $hash          = "[$hash][" . (count($this->links) - 1) . ']';
+                $hash          = "[$hash][" . $this->linkCount++ . ']';
             }
             unset($hash);
         }
