@@ -116,7 +116,7 @@ class Utilities
     {
         $key = array_search($value, $array, $strict);
         if (false === $key) {
-            throw new \OutOfBoundsException("Value $value, does not exist in array!");
+            throw new \OutOfBoundsException("Value $value does not exist in array!");
         }
 
         return $key;
