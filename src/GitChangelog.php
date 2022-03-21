@@ -37,6 +37,10 @@ declare(strict_types=1);
 
 namespace DigiLive\GitChangelog;
 
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\ExecutableFinder;
+use Symfony\Component\Process\Process;
+
 /**
  * Class GitChangelog
  *
@@ -74,7 +78,7 @@ class GitChangelog
     /**
      * @var string Path to local git repository.
      */
-    public $gitPath;
+    protected $repoPath;
     /**
      * @var string Base content to append to the generated changelog. If the value is a path which resolves to a file,
      *             append the content of this file.
@@ -152,19 +156,27 @@ class GitChangelog
         // 'Optimize',     // Refactor of performance, e.g. speed up code.
         // 'Document',     // Refactor of documentation, e.g. help files.
     ];
+    /**
+     * @var string|null Path to the Git executable. If not found automatically, it assumed the path is included in the
+     *                  systems' environment variables.
+     */
+    private $gitExecutable;
 
     /**
      * GitChangelog constructor.
      *
      * All git tags are pre-fetched from the repository at the given path.
      *
-     * @param   string  $gitPath  Path to the repository directory.
+     * @param   string  $repoPath  Path to the repository directory.
      *
      * @throws \DigiLive\GitChangelog\GitChangelogException When fetching the repository tags fails.
      */
-    public function __construct(string $gitPath = './')
+    public function __construct(string $repoPath = './')
     {
-        $this->gitPath = $gitPath;
+        $this->repoPath      = $repoPath;
+        $executableFinder    = new ExecutableFinder();
+        $this->gitExecutable = $executableFinder->find('git', 'git');
+
         $this->fetchTags();
     }
 
@@ -189,31 +201,37 @@ class GitChangelog
             return $this->gitTags;
         }
 
-        $gitPath = "--git-dir $this->gitPath.git";
-
-        // Get all git tags.
         $this->gitTags = [];
-        $commandResult = 1;
-        exec("git $gitPath tag --sort=-{$this->options['tagOrderBy']}", $this->gitTags, $commandResult);
-        if (0 !== $commandResult) {
-            // @codeCoverageIgnoreStart
+
+        try {
+            $this->gitTags = $this->runCommand(
+                [
+                    $this->gitExecutable,
+                    '--git-dir',
+                    "$this->repoPath.git",
+                    'tag',
+                    '--sort',
+                    "-{$this->options['tagOrderBy']}",
+                ],
+                true
+            );
+
+            // Add HEAD revision as tag.
+            if ($this->toTag === null) {
+                array_unshift($this->gitTags, $this->toTag);
+            }
+
+            $toKey  = Utilities::arraySearch($this->toTag, $this->gitTags);
+            $length = null;
+            if (null !== $this->fromTag) {
+                $length = Utilities::arraySearch($this->fromTag, $this->gitTags) - $toKey + 1;
+            }
+
+            // Cache requested git tags. $this->gitTags = [newest..oldest].
+            $this->gitTags = array_slice($this->gitTags, $toKey, $length);
+        } catch (GitChangelogException $e) {
             throw new GitChangelogException('An error occurred while fetching the tags from the repository!');
-            // @codeCoverageIgnoreEnd
         }
-
-        // Add HEAD revision as tag.
-        if ($this->toTag === null) {
-            array_unshift($this->gitTags, $this->toTag);
-        }
-
-        $toKey  = Utilities::arraySearch($this->toTag, $this->gitTags);
-        $length = null;
-        if (null !== $this->fromTag) {
-            $length = Utilities::arraySearch($this->fromTag, $this->gitTags) - $toKey + 1;
-        }
-
-        // Cache requested git tags. $this->gitTags = [newest..oldest].
-        $this->gitTags = array_slice($this->gitTags, $toKey, $length);
 
         return $this->gitTags;
     }
@@ -254,37 +272,57 @@ class GitChangelog
         }
 
         // Re-fetch tags because tag range and order can be altered after pre-fetch.
-        $gitTags    = $this->fetchTags(true);
-        $commitData = [];
+        $gitTags       = $this->fetchTags(true);
+        $commitData    = [];
+        $includeMerges = $this->options['includeMergeCommits'] ? null : '--no-merges';
 
-        $gitPath = "--git-dir $this->gitPath.git";
-
-        // Get tag dates and commit titles from git log for each tag.
-        $commandResults      = [1, 1];
-        $includeMergeCommits = $this->options['includeMergeCommits'] ? '' : '--no-merges';
+        // Fetch dates and commit titles/hashes from git log for each tag.
         foreach ($gitTags as $tag) {
             $rangeStart = next($gitTags);
             $tagRange   = false !== $rangeStart ? "$rangeStart..$tag" : "$tag";
 
-            $commitData[$tag]['date'] =
-                shell_exec("git $gitPath log -1 --pretty=format:%ad --date=short $tag") ?? 'Error';
-
-            exec(
-                "git $gitPath log $tagRange $includeMergeCommits --pretty=format:%s",
-                $commitData[$tag]['titles'],
-                $commandResults[0]
+            // Fetch tag dates.
+            $commitData[$tag]['date'] = $this->runCommand(
+                [
+                    $this->gitExecutable,
+                    '--git-dir',
+                    "$this->repoPath.git",
+                    'log',
+                    '-1',
+                    '--pretty=format:%ad',
+                    '--date=short',
+                    $tag,
+                ],
+                false
             );
-            exec(
-                "git $gitPath log $tagRange $includeMergeCommits --pretty=format:%h",
-                $commitData[$tag]['hashes'],
-                $commandResults[1]
+
+            // Fetch commit titles.
+            $commitData[$tag]['titles'] = $this->runCommand(
+                [
+                    $this->gitExecutable,
+                    '--git-dir',
+                    "$this->repoPath.git",
+                    'log',
+                    $tagRange,
+                    '--pretty=format:%s',
+                    $includeMerges,
+                ],
+                true
             );
 
-            if (array_sum($commandResults)) {
-                // @codeCoverageIgnoreStart
-                throw new \RuntimeException('An error occurred while fetching the commit data from the repository.');
-                // @codeCoverageIgnoreEnd
-            }
+            // Fetch commit hashes.
+            $commitData[$tag]['hashes'] = $this->runCommand(
+                [
+                    $this->gitExecutable,
+                    '--git-dir',
+                    "$this->repoPath.git",
+                    'log',
+                    $tagRange,
+                    '--pretty=format:%h',
+                    $includeMerges,
+                ],
+                true
+            );
         }
 
         // Cache commit data and process it.
@@ -363,14 +401,12 @@ class GitChangelog
      *
      * Optionally the generated changelog is appended with the content of property GitChangelog::$baseContent.
      *
-     * @SuppressWarnings(PHPMD.ErrorControlOperator)
-     *
-     * @param   bool  $append  [Optional] Set to true to append the changelog with base content.
+     * @param   bool  $append  Set to true to append the changelog with base content.
      *
      * @return string The generated changelog, optionally followed by base content.
      * @see GitChangelog::$baseContent
      */
-    public function get(bool $append = false): string
+    public function get(bool $append): string
     {
         return $this->changelog . ($append ? $this->baseContent : '');
     }
@@ -399,11 +435,11 @@ class GitChangelog
      *
      * Note: This method does not affect the contents of the pre-fetched tags.
      *
-     * @param   mixed  $tag  The newest tag to include.
+     * @param   ?string  $tag  The newest tag to include.
      *
      * @see GitChangelog::fetchTags()
      */
-    public function setToTag($tag = null): void
+    public function setToTag(?string $tag = null): void
     {
         $tag = $tag ?? '';
         Utilities::arraySearch($tag, $this->gitTags);
@@ -417,11 +453,11 @@ class GitChangelog
      *
      * Note: This method does not affect the contents of the pre-fetched tags.
      *
-     * @param   mixed  $tag  The oldest tag to include.
+     * @param   ?string  $tag  The oldest tag to include.
      *
      * @see GitChangelog::fetchTags()
      */
-    public function setFromTag($tag = null): void
+    public function setFromTag(?string $tag = null): void
     {
         if (null !== $tag) {
             Utilities::arraySearch($tag, $this->gitTags);
@@ -447,7 +483,7 @@ class GitChangelog
             try {
                 $key = Utilities::arraySearch($label, $this->labels);
                 unset($this->labels[$key]);
-            } catch (\InvalidArgumentException $e) {
+            } catch (\OutOfBoundsException $e) {
                 continue;
             }
         }
@@ -515,7 +551,7 @@ class GitChangelog
      * @param   mixed  $value  [Optional] Value of option.
      *
      * @throws \OutOfBoundsException If the option you're trying to set is invalid.
-     * @throws \OutOfRangeException When setting option 'headTag' to an invalid value.
+     * @throws \RangeException When setting option 'headTag' to an invalid value.
      * @throws \DigiLive\GitChangelog\GitChangelogException If fetching the repository tags fails.
      * @see GitChangelog::$options
      * @see GitChangelog::fetchTags()
@@ -532,10 +568,41 @@ class GitChangelog
             }
 
             if ('headTagName' == $option && in_array($value, $this->fetchTags())) {
-                throw new \OutOfRangeException('Attempt to set option headTagName to an already existing tag value!');
+                throw new \RangeException('Attempt to set option headTagName to an already existing tag value!');
             }
 
             $this->options[$option] = $value;
         }
+    }
+
+    /**
+     * Run a command to fetch data from the repository en get the output (STDOUT).
+     *
+     * If returning an array, each element will contain one line of the output.
+     *
+     * Note: Command arguments with an empty value are removed from the argument list.
+     *
+     * @param   array  $command  The command to run and its arguments listed as separate entries
+     * @param   bool   $asArray  True to return the output as an array, False to return the output as a string.
+     *
+     * @return array|string The output (STDOUT) of the process.
+     * @throws \DigiLive\GitChangelog\GitChangelogException When the process didn't terminate successfully.
+     */
+    private function runCommand(array $command, bool $asArray)
+    {
+        $process = new Process(array_values(array_filter($command)));
+
+        try {
+            $process->mustRun();
+            $output = $process->getOutput();
+        } catch (ProcessFailedException $e) {
+            throw new GitChangelogException('An error occurred while fetching data from the repository!');
+        }
+
+        if ($asArray) {
+            $output = explode("\n", trim($output));
+        }
+
+        return $output;
     }
 }

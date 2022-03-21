@@ -45,4 +45,5 @@ namespace DigiLive\GitChangelog;
  */
 class GitChangelogException extends \Exception
 {
+    // Intentionally left blank because the class doesn't extend or alters the \Exception class.
 }

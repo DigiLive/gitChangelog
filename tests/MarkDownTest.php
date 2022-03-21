@@ -38,7 +38,6 @@ namespace DigiLive\GitChangelog\Tests;
 use DigiLive\GitChangelog\Renderers\MarkDown;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-use ReflectionException;
 
 /**
  * Class MarkDownTest
@@ -75,7 +74,7 @@ class MarkDownTest extends TestCase
             ];
         $expectedValues =
             [
-                //No tags
+                // No tags
                 "# Changelog\n\nNo changes.\n",
                 // Head Revision included.
                 "# Changelog\n\n## Upcoming changes (Undetermined)\n\n* C (E)\n* D (F)\n\n",
@@ -94,18 +93,18 @@ class MarkDownTest extends TestCase
         foreach ($testValues as $key => $value) {
             $this->setPrivateProperty($changeLog, 'commitData', $value);
             $changeLog->build();
-            $this->assertEquals($expectedValues[$key], $changeLog->get());
+            $this->assertEquals($expectedValues[$key], $changeLog->get(false));
         }
 
         // Test formatting of issues and hashes.
         $changeLog->issueUrl  = '<i>{issue}</i>';
         $changeLog->commitUrl = '<c>{hash}</c>';
         $changeLog->build();
-        $this->assertEquals($expectedValues[5], $changeLog->get());
+        $this->assertEquals($expectedValues[5], $changeLog->get(false));
         // Disable hashes
         $changeLog->setOptions('addHashes', false);
         $changeLog->build();
-        $this->assertEquals($expectedValues[6], $changeLog->get());
+        $this->assertEquals($expectedValues[6], $changeLog->get(false));
     }
 
     /**
@@ -151,7 +150,7 @@ class MarkDownTest extends TestCase
             ];
         $expectedValues =
             [
-                //No tags
+                // No tags
                 "# Changelog\n\nNo changes.\n",
                 // Head Revision included.
                 "# Changelog\n\n## Upcoming changes (Undetermined)\n\n* D (F)\n* C (E)\n\n",
@@ -164,7 +163,7 @@ class MarkDownTest extends TestCase
         foreach ($testValues as $key => $value) {
             $this->setPrivateProperty($changeLog, 'commitData', $value);
             $changeLog->build();
-            $this->assertEquals($expectedValues[$key], $changeLog->get());
+            $this->assertEquals($expectedValues[$key], $changeLog->get(false));
         }
     }
 }
