@@ -8,8 +8,8 @@
         "remark-preset-lint-recommended": "^6.1.2"
     },
     "scripts": {
-        "markDown-check": "remark CHANGELOG.md --quiet --frail",
-        "markDown-fix": "remark CHANGELOG.md --silent --frail --output"
+        "markDown-check": "remark CHANGELOG.md --quiet --frail --no-stdout",
+        "markDown-fix": "remark CHANGELOG.md --quiet --frail --output"
     },
     "remarkConfig": {
         "settings": {
