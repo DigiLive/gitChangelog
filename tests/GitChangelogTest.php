@@ -40,6 +40,7 @@ declare(strict_types=1);
 namespace DigiLive\GitChangelog\Tests;
 
 use DigiLive\GitChangelog\GitChangelog;
+use DigiLive\GitChangelog\GitChangelogException;
 use Exception;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
@@ -127,7 +128,7 @@ class GitChangelogTest extends TestCase
         $this->setPrivateProperty($changeLog, 'changelog', $dummyContent);
 
         // Test without base content.
-        $this->assertequals($dummyContent, $changeLog->get());
+        $this->assertequals($dummyContent, $changeLog->get(false));
 
         // Test with base content
         $changeLog->setBaseContent($dummyContent);
@@ -197,7 +198,7 @@ class GitChangelogTest extends TestCase
     {
         $changeLog = new GitChangelog();
 
-        $this->expectException('Error');
+        $this->expectException(\Error::class);
         /** @noinspection PhpParamsInspection */
         $changeLog->setLabels(new stdClass());
     }
@@ -236,7 +237,7 @@ class GitChangelogTest extends TestCase
         $this->assertNull($this->getPrivateProperty($changeLog, 'fromTag'));
 
         // Test exception.
-        $this->expectException('Exception');
+        $this->expectException(\OutOfBoundsException::class);
         $changeLog->setFromTag('DoesNotExist');
     }
 
@@ -298,7 +299,7 @@ class GitChangelogTest extends TestCase
         $this->assertSame('', $this->getPrivateProperty($changeLog, 'toTag'));
 
         // Test exception.
-        $this->expectException('Exception');
+        $this->expectException(\OutOfBoundsException::class);
         $changeLog->setToTag('DoesNotExist');
     }
 
@@ -347,7 +348,7 @@ class GitChangelogTest extends TestCase
     {
         $changeLog = new GitChangelog();
 
-        $this->expectException('RunTimeException');
+        $this->expectException(GitChangelogException::class);
         $changeLog->save('nonExistingPath/fileName');
     }
 
@@ -360,7 +361,7 @@ class GitChangelogTest extends TestCase
         $changeLog->save($filePath);
         chmod($filePath, 0000);
 
-        $this->expectException('RunTimeException');
+        $this->expectException(GitChangelogException::class);
         $changeLog->save(vfsStream::url('testFolder/changelog.md'));
     }
 
@@ -387,7 +388,7 @@ class GitChangelogTest extends TestCase
     {
         $changeLog = new GitChangelog();
 
-        $this->expectException('InvalidArgumentException');
+        $this->expectException(\OutOfBoundsException::class);
         $changeLog->setOptions('NotExistingOption', 'Test');
     }
 
@@ -396,7 +397,7 @@ class GitChangelogTest extends TestCase
         $changeLog = new GitChangelog();
         $this->setPrivateProperty($changeLog, 'gitTags', ['Test']);
 
-        $this->expectException('InvalidArgumentException');
+        $this->expectException(\RangeException::class);
         $changeLog->setOptions('headTagName', 'Test');
     }
 }

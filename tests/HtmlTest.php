@@ -97,18 +97,18 @@ class HtmlTest extends TestCase
         foreach ($testValues as $key => $value) {
             $this->setPrivateProperty($changeLog, 'commitData', $value);
             $changeLog->build();
-            $this->assertEquals($expectedValues[$key], $changeLog->get());
+            $this->assertEquals($expectedValues[$key], $changeLog->get(false));
         }
 
         // Test formatting of issues and hashes.
         $changeLog->issueUrl  = '<Issue>{issue}</Issue>';
         $changeLog->commitUrl = '<Commit>{hash}</Commit>';
         $changeLog->build();
-        $this->assertEquals($expectedValues[5], $changeLog->get());
+        $this->assertEquals($expectedValues[5], $changeLog->get(false));
         // Disable hashes
         $changeLog->setOptions('addHashes', false);
         $changeLog->build();
-        $this->assertEquals($expectedValues[6], $changeLog->get());
+        $this->assertEquals($expectedValues[6], $changeLog->get(false));
     }
 
     /**
@@ -168,7 +168,7 @@ class HtmlTest extends TestCase
         foreach ($testValues as $key => $value) {
             $this->setPrivateProperty($changeLog, 'commitData', $value);
             $changeLog->build();
-            $this->assertEquals($expectedValues[$key], $changeLog->get());
+            $this->assertEquals($expectedValues[$key], $changeLog->get(false));
         }
     }
 }
