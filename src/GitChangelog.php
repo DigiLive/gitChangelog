@@ -425,11 +425,11 @@ class GitChangelog
      *
      * Note: This method does not affect the contents of the pre-fetched tags.
      *
-     * @param   mixed  $tag  The newest tag to include.
+     * @param   ?string  $tag  The newest tag to include.
      *
      * @see GitChangelog::fetchTags()
      */
-    public function setToTag($tag = null): void
+    public function setToTag(string $tag = null): void
     {
         $tag = $tag ?? '';
         Utilities::arraySearch($tag, $this->gitTags);
@@ -443,11 +443,11 @@ class GitChangelog
      *
      * Note: This method does not affect the contents of the pre-fetched tags.
      *
-     * @param   mixed  $tag  The oldest tag to include.
+     * @param   ?string  $tag  The oldest tag to include.
      *
      * @see GitChangelog::fetchTags()
      */
-    public function setFromTag($tag = null): void
+    public function setFromTag(string $tag = null): void
     {
         if (null !== $tag) {
             Utilities::arraySearch($tag, $this->gitTags);
@@ -473,7 +473,7 @@ class GitChangelog
             try {
                 $key = Utilities::arraySearch($label, $this->labels);
                 unset($this->labels[$key]);
-            } catch (\InvalidArgumentException $e) {
+            } catch (\OutOfBoundsException $e) {
                 continue;
             }
         }
@@ -541,7 +541,7 @@ class GitChangelog
      * @param   mixed  $value  [Optional] Value of option.
      *
      * @throws \OutOfBoundsException If the option you're trying to set is invalid.
-     * @throws \OutOfRangeException When setting option 'headTag' to an invalid value.
+     * @throws \RangeException When setting option 'headTag' to an invalid value.
      * @throws \DigiLive\GitChangelog\GitChangelogException If fetching the repository tags fails.
      * @see GitChangelog::$options
      * @see GitChangelog::fetchTags()
@@ -558,7 +558,7 @@ class GitChangelog
             }
 
             if ('headTagName' == $option && in_array($value, $this->fetchTags())) {
-                throw new \OutOfRangeException('Attempt to set option headTagName to an already existing tag value!');
+                throw new \RangeException('Attempt to set option headTagName to an already existing tag value!');
             }
 
             $this->options[$option] = $value;
