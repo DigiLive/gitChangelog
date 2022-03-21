@@ -202,17 +202,20 @@ class GitChangelog
         }
 
         $this->gitTags = [];
-        $command       = [
-            $this->gitExecutable,
-            '--git-dir',
-            "$this->repoPath.git",
-            'tag',
-            '--sort',
-            "-{$this->options['tagOrderBy']}",
-        ];
 
         try {
-            $this->gitTags = $this->runCommand($command, true);
+            $this->gitTags = $this->runCommand(
+                [
+                    $this->gitExecutable,
+                    '--git-dir',
+                    "$this->repoPath.git",
+                    'tag',
+                    '--sort',
+                    "-{$this->options['tagOrderBy']}",
+                ],
+                true
+            );
+
             // Add HEAD revision as tag.
             if ($this->toTag === null) {
                 array_unshift($this->gitTags, $this->toTag);
@@ -269,8 +272,8 @@ class GitChangelog
         }
 
         // Re-fetch tags because tag range and order can be altered after pre-fetch.
-        $gitTags    = $this->fetchTags(true);
-        $commitData = [];
+        $gitTags       = $this->fetchTags(true);
+        $commitData    = [];
         $includeMerges = $this->options['includeMergeCommits'] ? null : '--no-merges';
 
         // Fetch dates and commit titles/hashes from git log for each tag.
@@ -279,38 +282,47 @@ class GitChangelog
             $tagRange   = false !== $rangeStart ? "$rangeStart..$tag" : "$tag";
 
             // Fetch tag dates.
-            $commitData[$tag]['date'] = $this->runCommand([
-                $this->gitExecutable,
-                '--git-dir',
-                "$this->repoPath.git",
-                'log',
-                '-1',
-                '--pretty=format:%ad',
-                '--date=short',
-                $tag,
-            ], false);
+            $commitData[$tag]['date'] = $this->runCommand(
+                [
+                    $this->gitExecutable,
+                    '--git-dir',
+                    "$this->repoPath.git",
+                    'log',
+                    '-1',
+                    '--pretty=format:%ad',
+                    '--date=short',
+                    $tag,
+                ],
+                false
+            );
 
             // Fetch commit titles.
-            $commitData[$tag]['titles'] = $this->runCommand([
-                $this->gitExecutable,
-                '--git-dir',
-                "$this->repoPath.git",
-                'log',
-                $tagRange,
-                '--pretty=format:%s',
-                $includeMerges,
-            ], true);
+            $commitData[$tag]['titles'] = $this->runCommand(
+                [
+                    $this->gitExecutable,
+                    '--git-dir',
+                    "$this->repoPath.git",
+                    'log',
+                    $tagRange,
+                    '--pretty=format:%s',
+                    $includeMerges,
+                ],
+                true
+            );
 
             // Fetch commit hashes.
-            $commitData[$tag]['hashes'] = $this->runCommand([
-                $this->gitExecutable,
-                '--git-dir',
-                "$this->repoPath.git",
-                'log',
-                $tagRange,
-                '--pretty=format:%h',
-                $includeMerges,
-            ], true);
+            $commitData[$tag]['hashes'] = $this->runCommand(
+                [
+                    $this->gitExecutable,
+                    '--git-dir',
+                    "$this->repoPath.git",
+                    'log',
+                    $tagRange,
+                    '--pretty=format:%h',
+                    $includeMerges,
+                ],
+                true
+            );
         }
 
         // Cache commit data and process it.
@@ -427,7 +439,7 @@ class GitChangelog
      *
      * @see GitChangelog::fetchTags()
      */
-    public function setToTag(string $tag = null): void
+    public function setToTag(?string $tag = null): void
     {
         $tag = $tag ?? '';
         Utilities::arraySearch($tag, $this->gitTags);
@@ -445,7 +457,7 @@ class GitChangelog
      *
      * @see GitChangelog::fetchTags()
      */
-    public function setFromTag(string $tag = null): void
+    public function setFromTag(?string $tag = null): void
     {
         if (null !== $tag) {
             Utilities::arraySearch($tag, $this->gitTags);
