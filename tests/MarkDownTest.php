@@ -38,7 +38,6 @@ namespace DigiLive\GitChangelog\Tests;
 use DigiLive\GitChangelog\Renderers\MarkDown;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-use ReflectionException;
 
 /**
  * Class MarkDownTest

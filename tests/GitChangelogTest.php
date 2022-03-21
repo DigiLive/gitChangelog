@@ -45,7 +45,6 @@ use Exception;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-use ReflectionException;
 use stdClass;
 
 /**
