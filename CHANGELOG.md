@@ -1,25 +1,35 @@
 # Changelog
 
-## v1.0.2 (2022-02-20)
+## Next Release (Soon)
 
-* Add Codacy configuration file ([4e76f4e][0])
-* Add force fetching tags when fetching commit data ([521d2e4][1])
-* Add grouping of links to markdown renderer ([19a5d12][2])
-* Add npm remark-lint packages ([272d015][3])
-* Add setting gitPath property to constructor ([60fa232][4])
-* Add test for fetching duplicate tags ([5377c20][5])
-* Fix [#14][6] - Ambiguous argument 'tag^' ([0127ce2][7])
-* Fix PHPUnit tests ([ea7589f][8])
-* Fix grammar of issue templates ([6f365ba][9])
-* Fix not clearing links before build ([da3954c][10])
-* Fix setting wrong gitPath ([871f440][11])
-* Optimize code ([6cc0e1a][12])
-* Optimize fetching commit data ([15543cb][13])
+* Add Codacy configuration file ([4e76f4e][61])
+* Add GitChangelog Exception class ([a1f1a60][60])
+* Add force fetching tags when fetching commit data ([521d2e4][59])
+* Add grouping of links to markdown renderer ([19a5d12][58])
+* Add npm remark-lint packages ([272d015][57])
+* Add reversed indexing of reference links ([ec254da][56])
+* Add setting gitPath property to constructor ([60fa232][55])
+* Add symfony/process package ([55d59bb][54])
+* Add test for fetching duplicate tags ([5377c20][53])
+* Fix [#14][52] - Ambiguous argument 'tag^' ([0127ce2][51])
+* Fix Codacy issues ([6574d59][50])
+* Fix PHPUnit test. ([c6b978e][49])
+* Fix PHPUnit tests ([ea7589f][48])
+* Fix SRP violation ([00fff5f][47])
+* Fix codacy issues ([80fe12b][46])
+* Fix grammar of issue templates ([6f365ba][45])
+* Fix not clearing links before build ([da3954c][44])
+* Fix property visibility ([dc2847c][43])
+* Fix setting wrong gitPath ([871f440][42])
+* Fix unused imports ([f12ed2e][41])
+* Optimize MarkDown::build() ([3b44d93][40])
+* Optimize code ([6cc0e1a][39])
+* Optimize fetching commit data ([15543cb][38])
 
 ## v1.0.1 (2021-06-09)
 
-* Add compatibility with PHP version 8 ([cb04682][14])
-* Fix duplicating tags on re-fetching tags ([d30c8cd][15])
+* Add compatibility with PHP version 8 ([cb04682][37])
+* Fix duplicating tags on re-fetching tags ([d30c8cd][36])
 
 ## v1.0.0 (2020-12-16)
 
@@ -27,116 +37,126 @@
 
 ## v1.0.0-rc.1 (2020-11-30)
 
-* Add PhpUnit tests for class Html and MarkDown ([a4890bc][16])
-* Add code coverage tags ([7ce91b8][17])
-* Add formatting of issues ids & hashes to hyperlink ([10816fb][18])
-* Add issue templates ([5bbf5ef][19], [6d34e1c][20])
-* Add setting base content by value or file content. ([93ca694][21])
-* Fix [#7][22], Fix [#8][23] ([d4e352e][24])
-* Fix PhpUnit tests for GitChangelog ([b62ded6][25])
-* Fix docBlock of GitChangelog::$labels ([1fea85e][26])
-* Fix filename to PSR4 rules ([27911a9][27])
-* Fix html renderer ([c66b572][28])
-* Fix markdown renderer ([ab29669][29])
-* Optimize Git execution and Fix docBlocks ([fc79a58][30])
+* Add PhpUnit tests for class Html and MarkDown ([a4890bc][35])
+* Add code coverage tags ([7ce91b8][34])
+* Add formatting of issues ids & hashes to hyperlink ([10816fb][33])
+* Add issue templates ([5bbf5ef][32], [6d34e1c][31])
+* Add setting base content by value or file content. ([93ca694][30])
+* Fix [#7][29], Fix [#8][28] ([d4e352e][27])
+* Fix PhpUnit tests for GitChangelog ([b62ded6][26])
+* Fix docBlock of GitChangelog::$labels ([1fea85e][25])
+* Fix filename to PSR4 rules ([27911a9][24])
+* Fix html renderer ([c66b572][23])
+* Fix markdown renderer ([ab29669][22])
+* Optimize Git execution and Fix docBlocks ([fc79a58][21])
 
 ## v0.4.0 (2020-10-28)
 
-* Add separate renderers for GitChangelog ([2df97ee][31])
+* Add separate renderers for GitChangelog ([2df97ee][20])
 
 ## v0.3.0 (2020-10-26)
 
-* Fix get method ([a9a9804][32])
-* Optimize save method ([d0b1a07][33])
+* Fix get method ([a9a9804][19])
+* Optimize save method ([d0b1a07][18])
 
 ## v0.2.0 (2020-10-23)
 
 * Add Option to sort the changelog by tags in ascending/descending order
-([5f6473d][34])
+([5f6473d][17])
 
-* Add PHPUnit tests for GitChangelog::setOptions() ([94b1301][35])
+* Add PHPUnit tests for GitChangelog::setOptions() ([94b1301][16])
 
-* Add formatting of a single hash ([392db51][36])
+* Add formatting of a single hash ([392db51][15])
 
-* Add git ignoring ([a574e81][37])
+* Add git ignoring ([a574e81][14])
 
 * Add options property which replaces individual option properties
-([2357497][38])
+([2357497][13])
 
-* Add option to set another git repository ([f8e2449][39])
+* Add option to set another git repository ([f8e2449][12])
 
-* Add setting sorting key for fetching tags ([a477f4f][40])
+* Add setting sorting key for fetching tags ([a477f4f][11])
 
-* Add sorting order of commit subjects ([37389dc][41])
+* Add sorting order of commit subjects ([37389dc][10])
 
-* Bump php version ([101b8fa][42])
+* Bump php version ([101b8fa][9])
 
-* Fix PHPUnit tests ([52de68a][43], [d888afd][44])
+* Fix PHPUnit tests ([52de68a][8], [d888afd][7])
 
-* Optimize commitData processing ([6dc2bee][45])
+* Optimize commitData processing ([6dc2bee][6])
 
-* Optimize method GitChangeLog::build() ([31d33af][46])
+* Optimize method GitChangeLog::build() ([31d33af][5])
 
 ## v0.1.1 (2020-10-21)
 
-* Add changelog ([da391ec][47])
-* Bump php version ([ece339e][48])
-* Cut composer.lock ([580233b][49])
+* Add changelog ([da391ec][4])
+* Bump php version ([ece339e][3])
+* Cut composer.lock ([580233b][2])
 
 ## v0.1.0 (2020-10-21)
 
-* Add changelog ([a4336bc][50])
-* Add library code ([731f58a][51])
+* Add changelog ([a4336bc][1])
+* Add library code ([731f58a][0])
 
-[0]:https://github.com/DigiLive/gitChangelog/commit/4e76f4e
-[1]:https://github.com/DigiLive/gitChangelog/commit/521d2e4
-[2]:https://github.com/DigiLive/gitChangelog/commit/19a5d12
-[3]:https://github.com/DigiLive/gitChangelog/commit/272d015
-[4]:https://github.com/DigiLive/gitChangelog/commit/60fa232
-[5]:https://github.com/DigiLive/gitChangelog/commit/5377c20
-[6]:https://github.com/DigiLive/gitChangelog/issues/14
-[7]:https://github.com/DigiLive/gitChangelog/commit/0127ce2
-[8]:https://github.com/DigiLive/gitChangelog/commit/ea7589f
-[9]:https://github.com/DigiLive/gitChangelog/commit/6f365ba
-[10]:https://github.com/DigiLive/gitChangelog/commit/da3954c
-[11]:https://github.com/DigiLive/gitChangelog/commit/871f440
-[12]:https://github.com/DigiLive/gitChangelog/commit/6cc0e1a
-[13]:https://github.com/DigiLive/gitChangelog/commit/15543cb
-[14]:https://github.com/DigiLive/gitChangelog/commit/cb04682
-[15]:https://github.com/DigiLive/gitChangelog/commit/d30c8cd
-[16]:https://github.com/DigiLive/gitChangelog/commit/a4890bc
-[17]:https://github.com/DigiLive/gitChangelog/commit/7ce91b8
-[18]:https://github.com/DigiLive/gitChangelog/commit/10816fb
-[19]:https://github.com/DigiLive/gitChangelog/commit/5bbf5ef
-[20]:https://github.com/DigiLive/gitChangelog/commit/6d34e1c
-[21]:https://github.com/DigiLive/gitChangelog/commit/93ca694
-[22]:https://github.com/DigiLive/gitChangelog/issues/7
-[23]:https://github.com/DigiLive/gitChangelog/issues/8
-[24]:https://github.com/DigiLive/gitChangelog/commit/d4e352e
-[25]:https://github.com/DigiLive/gitChangelog/commit/b62ded6
-[26]:https://github.com/DigiLive/gitChangelog/commit/1fea85e
-[27]:https://github.com/DigiLive/gitChangelog/commit/27911a9
-[28]:https://github.com/DigiLive/gitChangelog/commit/c66b572
-[29]:https://github.com/DigiLive/gitChangelog/commit/ab29669
-[30]:https://github.com/DigiLive/gitChangelog/commit/fc79a58
-[31]:https://github.com/DigiLive/gitChangelog/commit/2df97ee
-[32]:https://github.com/DigiLive/gitChangelog/commit/a9a9804
-[33]:https://github.com/DigiLive/gitChangelog/commit/d0b1a07
-[34]:https://github.com/DigiLive/gitChangelog/commit/5f6473d
-[35]:https://github.com/DigiLive/gitChangelog/commit/94b1301
-[36]:https://github.com/DigiLive/gitChangelog/commit/392db51
-[37]:https://github.com/DigiLive/gitChangelog/commit/a574e81
-[38]:https://github.com/DigiLive/gitChangelog/commit/2357497
-[39]:https://github.com/DigiLive/gitChangelog/commit/f8e2449
-[40]:https://github.com/DigiLive/gitChangelog/commit/a477f4f
-[41]:https://github.com/DigiLive/gitChangelog/commit/37389dc
-[42]:https://github.com/DigiLive/gitChangelog/commit/101b8fa
-[43]:https://github.com/DigiLive/gitChangelog/commit/52de68a
-[44]:https://github.com/DigiLive/gitChangelog/commit/d888afd
-[45]:https://github.com/DigiLive/gitChangelog/commit/6dc2bee
-[46]:https://github.com/DigiLive/gitChangelog/commit/31d33af
-[47]:https://github.com/DigiLive/gitChangelog/commit/da391ec
-[48]:https://github.com/DigiLive/gitChangelog/commit/ece339e
-[49]:https://github.com/DigiLive/gitChangelog/commit/580233b
-[50]:https://github.com/DigiLive/gitChangelog/commit/a4336bc
-[51]:https://github.com/DigiLive/gitChangelog/commit/731f58a
+[0]:https://github.com/DigiLive/gitChangelog/commit/731f58a
+[1]:https://github.com/DigiLive/gitChangelog/commit/a4336bc
+[2]:https://github.com/DigiLive/gitChangelog/commit/580233b
+[3]:https://github.com/DigiLive/gitChangelog/commit/ece339e
+[4]:https://github.com/DigiLive/gitChangelog/commit/da391ec
+[5]:https://github.com/DigiLive/gitChangelog/commit/31d33af
+[6]:https://github.com/DigiLive/gitChangelog/commit/6dc2bee
+[7]:https://github.com/DigiLive/gitChangelog/commit/d888afd
+[8]:https://github.com/DigiLive/gitChangelog/commit/52de68a
+[9]:https://github.com/DigiLive/gitChangelog/commit/101b8fa
+[10]:https://github.com/DigiLive/gitChangelog/commit/37389dc
+[11]:https://github.com/DigiLive/gitChangelog/commit/a477f4f
+[12]:https://github.com/DigiLive/gitChangelog/commit/f8e2449
+[13]:https://github.com/DigiLive/gitChangelog/commit/2357497
+[14]:https://github.com/DigiLive/gitChangelog/commit/a574e81
+[15]:https://github.com/DigiLive/gitChangelog/commit/392db51
+[16]:https://github.com/DigiLive/gitChangelog/commit/94b1301
+[17]:https://github.com/DigiLive/gitChangelog/commit/5f6473d
+[18]:https://github.com/DigiLive/gitChangelog/commit/d0b1a07
+[19]:https://github.com/DigiLive/gitChangelog/commit/a9a9804
+[20]:https://github.com/DigiLive/gitChangelog/commit/2df97ee
+[21]:https://github.com/DigiLive/gitChangelog/commit/fc79a58
+[22]:https://github.com/DigiLive/gitChangelog/commit/ab29669
+[23]:https://github.com/DigiLive/gitChangelog/commit/c66b572
+[24]:https://github.com/DigiLive/gitChangelog/commit/27911a9
+[25]:https://github.com/DigiLive/gitChangelog/commit/1fea85e
+[26]:https://github.com/DigiLive/gitChangelog/commit/b62ded6
+[27]:https://github.com/DigiLive/gitChangelog/commit/d4e352e
+[28]:https://github.com/DigiLive/gitChangelog/issues/8
+[29]:https://github.com/DigiLive/gitChangelog/issues/7
+[30]:https://github.com/DigiLive/gitChangelog/commit/93ca694
+[31]:https://github.com/DigiLive/gitChangelog/commit/6d34e1c
+[32]:https://github.com/DigiLive/gitChangelog/commit/5bbf5ef
+[33]:https://github.com/DigiLive/gitChangelog/commit/10816fb
+[34]:https://github.com/DigiLive/gitChangelog/commit/7ce91b8
+[35]:https://github.com/DigiLive/gitChangelog/commit/a4890bc
+[36]:https://github.com/DigiLive/gitChangelog/commit/d30c8cd
+[37]:https://github.com/DigiLive/gitChangelog/commit/cb04682
+[38]:https://github.com/DigiLive/gitChangelog/commit/15543cb
+[39]:https://github.com/DigiLive/gitChangelog/commit/6cc0e1a
+[40]:https://github.com/DigiLive/gitChangelog/commit/3b44d93
+[41]:https://github.com/DigiLive/gitChangelog/commit/f12ed2e
+[42]:https://github.com/DigiLive/gitChangelog/commit/871f440
+[43]:https://github.com/DigiLive/gitChangelog/commit/dc2847c
+[44]:https://github.com/DigiLive/gitChangelog/commit/da3954c
+[45]:https://github.com/DigiLive/gitChangelog/commit/6f365ba
+[46]:https://github.com/DigiLive/gitChangelog/commit/80fe12b
+[47]:https://github.com/DigiLive/gitChangelog/commit/00fff5f
+[48]:https://github.com/DigiLive/gitChangelog/commit/ea7589f
+[49]:https://github.com/DigiLive/gitChangelog/commit/c6b978e
+[50]:https://github.com/DigiLive/gitChangelog/commit/6574d59
+[51]:https://github.com/DigiLive/gitChangelog/commit/0127ce2
+[52]:https://github.com/DigiLive/gitChangelog/issues/14
+[53]:https://github.com/DigiLive/gitChangelog/commit/5377c20
+[54]:https://github.com/DigiLive/gitChangelog/commit/55d59bb
+[55]:https://github.com/DigiLive/gitChangelog/commit/60fa232
+[56]:https://github.com/DigiLive/gitChangelog/commit/ec254da
+[57]:https://github.com/DigiLive/gitChangelog/commit/272d015
+[58]:https://github.com/DigiLive/gitChangelog/commit/19a5d12
+[59]:https://github.com/DigiLive/gitChangelog/commit/521d2e4
+[60]:https://github.com/DigiLive/gitChangelog/commit/a1f1a60
+[61]:https://github.com/DigiLive/gitChangelog/commit/4e76f4e

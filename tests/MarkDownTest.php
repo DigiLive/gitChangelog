@@ -85,7 +85,7 @@ class MarkDownTest extends TestCase
                 // Dummy tag and commits to be formatted, but they're not.
                 "# Changelog\n\n## A (B)\n\n* #1 (0123456)\n\n",
                 // Dummy tag and commits to be formatted, and they are.
-                "# Changelog\n\n## A (B)\n\n* [#1][0] ([0123456][1])\n\n[0]:<i>1</i>\n[1]:<c>0123456</c>\n",
+                "# Changelog\n\n## A (B)\n\n* [#1][1] ([0123456][0])\n\n[0]:<c>0123456</c>\n[1]:<i>1</i>\n",
                 // Dummy tag and commits to be formatted, but hashes are disabled.
                 "# Changelog\n\n## A (B)\n\n* [#1][0]\n\n[0]:<i>1</i>\n",
             ];

@@ -532,7 +532,7 @@ class GitChangelog
     public function addLabel(...$labels)
     {
         foreach ($labels as $label) {
-            $this->labels[] = (string)$label;
+            $this->labels[] = (string) $label;
         }
 
         $this->labels = array_unique($this->labels);

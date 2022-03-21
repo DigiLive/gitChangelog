@@ -69,7 +69,6 @@ class Utilities
      * Check if a string starts with a case-insensitive substring.
      *
      * Parameter $needles can be of type string or an array of strings.
-     * Comparison is
      *
      * @param   string        $haystack  The string to search in.
      * @param   string|array  $needles   If a needle is not a string, it is converted to an integer and applied as the
