@@ -78,7 +78,7 @@ class GitChangelog
     /**
      * @var string Path to local git repository.
      */
-    protected $repoPath;
+    private $repoPath;
     /**
      * @var string Base content to append to the generated changelog. If the value is a path which resolves to a file,
      *             append the content of this file.
@@ -137,13 +137,13 @@ class GitChangelog
      *            If the first element's key is null, it refers to the HEAD revision.
      * @see GitChangelog::fetchTags();
      */
-    private $gitTags;
+    protected $gitTags;
     /**
      * @var string[] Contains the labels to filter the commit titles.
      *               Only titles which start with any of these labels will be listed.
      *               To disable this filtering, remove all labels from this property.
      */
-    private $labels = [
+    protected $labels = [
         // 'Add',          // Create a capability e.g. feature, test, dependency.
         // 'Cut',          // Remove a capability e.g. feature, test, dependency.
         // 'Fix',          // Fix an issue e.g. bug, typo, accident, misstatement.
