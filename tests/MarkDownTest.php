@@ -53,7 +53,8 @@ class MarkDownTest extends TestCase
      * Test if a changelog is build with the repository tags in ascending order.
      *
      * @return void
-     * @throws \ReflectionException When setting private properties fail.
+     * @throws \DigiLive\GitChangelog\GitChangelogException When setting the GitChangelog options fails.
+     * @throws \ReflectionException When setting a private property fails.
      */
     public function testBuildAscendingOrders()
     {
@@ -115,7 +116,7 @@ class MarkDownTest extends TestCase
      * @param           $value     - New value of the property which is being modified.
      *
      * @return void
-     * @throws ReflectionException If no property exists by that name.
+     * @throws \ReflectionException If no property exists by that name.
      */
     private function setPrivateProperty(object $object, string $property, $value): void
     {
@@ -130,7 +131,8 @@ class MarkDownTest extends TestCase
      * Test if a changelog is build with the repository tags in descending order.
      *
      * @return void
-     * @throws \ReflectionException When setting private properties fail.
+     * @throws \DigiLive\GitChangelog\GitChangelogException When setting the GitChangelog options fails.
+     * @throws \ReflectionException When setting a private property fails.
      */
     public function testBuildDescendingOrders()
     {

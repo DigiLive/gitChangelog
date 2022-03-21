@@ -66,7 +66,7 @@ class Html extends GitChangelog implements RendererInterface
      *
      * The generated changelog will be stored into a class property.
      *
-     * @throws \Exception When the defined From- or To-tag doesn't exist in the git repository.
+     * @throws \DigiLive\GitChangelog\GitChangelogException When fetching the commit data from the repository fails.
      */
     public function build(): void
     {

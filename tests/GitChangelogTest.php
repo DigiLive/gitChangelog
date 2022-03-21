@@ -100,7 +100,7 @@ class GitChangelogTest extends TestCase
      * @param           $value     - New value of the property which is being modified.
      *
      * @return void
-     * @throws ReflectionException If no property exists by that name.
+     * @throws \ReflectionException If no property exists by that name.
      */
     private function setPrivateProperty(object $object, string $property, $value): void
     {
@@ -169,7 +169,7 @@ class GitChangelogTest extends TestCase
      * @param   string  $property  - Property of instance which is being read.
      *
      * @return mixed The value of the property.
-     * @throws ReflectionException If no property exists by that name.
+     * @throws \ReflectionException If no property exists by that name.
      */
     private function getPrivateProperty(object $object, string $property)
     {

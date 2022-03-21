@@ -53,7 +53,9 @@ class HtmlTest extends TestCase
      * Test if a changelog is build with the repository tags in ascending order.
      *
      * @return void
-     * @throws \ReflectionException When setting private properties fail.
+     *
+     * @throws \DigiLive\GitChangelog\GitChangelogException When setting the GitChangelog options fails.
+     * @throws \ReflectionException When setting a private property fails.
      */
     public function testBuildAscendingOrders()
     {
@@ -114,10 +116,10 @@ class HtmlTest extends TestCase
      *
      * @param   object  $object    - Instance in which the private or protected value is being modified.
      * @param   string  $property  - Property of instance which is being modified.
-     * @param   mixed  $value     - New value of the property which is being modified.
+     * @param   mixed   $value     - New value of the property which is being modified.
      *
      * @return void
-     * @throws ReflectionException If no property exists by that name.
+     * @throws \ReflectionException If no property exists by that name.
      */
     private function setPrivateProperty(object $object, string $property, $value): void
     {
@@ -132,7 +134,8 @@ class HtmlTest extends TestCase
      * Test if a changelog is build with the repository tags in ascending order.
      *
      * @return void
-     * @throws \ReflectionException When setting private properties fail.
+     * @throws \DigiLive\GitChangelog\GitChangelogException When setting the GitChangelog options fails.
+     * @throws \ReflectionException When setting a private property fails.
      */
     public function testBuildDescendingOrders()
     {

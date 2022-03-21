@@ -110,13 +110,13 @@ class Utilities
      *             If needle is found in haystack more than once, the first matching key is returned.
      *             To return the keys for all matching values, use array_keys with the optional search_value parameter
      *             instead.
-     * @throws \InvalidArgumentException If the value is not found in array.
+     * @throws \OutOfBoundsException If the value is not found in array.
      */
     public static function arraySearch($value, array $array, bool $strict = false): int
     {
         $key = array_search($value, $array, $strict);
         if (false === $key) {
-            throw new \InvalidArgumentException("'$value' does not exist in array!");
+            throw new \OutOfBoundsException("Value $value, does not exist in array!");
         }
 
         return $key;

@@ -160,7 +160,7 @@ class GitChangelog
      *
      * @param   string  $gitPath  Path to the repository directory.
      *
-     * @throws \Exception When the defined From- or To-tag doesn't exist in the git repository.
+     * @throws \DigiLive\GitChangelog\GitChangelogException When fetching the repository tags fails.
      */
     public function __construct(string $gitPath = './')
     {
@@ -180,8 +180,7 @@ class GitChangelog
      * @param   bool  $force  [Optional] Set to true to refresh the cached tags.
      *
      * @return array The cached tags.
-     * @throws \InvalidArgumentException When the defined From- or To-tag doesn't exist in the git repository.
-     * @throws \RuntimeException When executing the git command fails.
+     * @throws \DigiLive\GitChangelog\GitChangelogException When fetching the tags fails.
      */
     public function fetchTags(bool $force = false): array
     {
@@ -198,7 +197,7 @@ class GitChangelog
         exec("git $gitPath tag --sort=-{$this->options['tagOrderBy']}", $this->gitTags, $commandResult);
         if (0 !== $commandResult) {
             // @codeCoverageIgnoreStart
-            throw new \RuntimeException('An error occurred while fetching the tags from the repository!');
+            throw new GitChangelogException('An error occurred while fetching the tags from the repository!');
             // @codeCoverageIgnoreEnd
         }
 
@@ -244,8 +243,7 @@ class GitChangelog
      * @param   false  $force  [Optional] Set to true to refresh the cached commit data.
      *
      * @return array    Commit data.
-     * @throws \InvalidArgumentException When the defined From- or To-tag doesn't exist in the git repository.
-     * @throws \RuntimeException When executing a git command fails.
+     * @throws \DigiLive\GitChangelog\GitChangelogException When fetching the repository tags fails.
      * @see GitChangelog::processCommitData()
      */
     public function fetchCommitData(bool $force = false): array
@@ -350,13 +348,13 @@ class GitChangelog
      *
      * @param   string  $filePath  Path to file to save the changelog.
      *
-     * @throws \RuntimeException When writing of the file fails.
+     * @throws \DigiLive\GitChangelog\GitChangelogException When writing of the file fails.
      * @see GitChangelog::$baseContent
      */
     public function save(string $filePath): void
     {
         if (@file_put_contents($filePath, $this->changelog . $this->baseContent) === false) {
-            throw new \RuntimeException('Unable to write to file!');
+            throw new GitChangelogException('Unable to write to file!');
         }
     }
 
@@ -403,7 +401,6 @@ class GitChangelog
      *
      * @param   mixed  $tag  The newest tag to include.
      *
-     * @throws \InvalidArgumentException When the tag does not exist in the repository.
      * @see GitChangelog::fetchTags()
      */
     public function setToTag($tag = null): void
@@ -422,7 +419,6 @@ class GitChangelog
      *
      * @param   mixed  $tag  The oldest tag to include.
      *
-     * @throws \InvalidArgumentException When the tag does not exist in the repository.
      * @see GitChangelog::fetchTags()
      */
     public function setFromTag($tag = null): void
@@ -518,9 +514,9 @@ class GitChangelog
      * @param   mixed  $name   Name of option or array of option names and values.
      * @param   mixed  $value  [Optional] Value of option.
      *
-     * @throws \Exception If option 'headTag' can't be validated.
-     * @throws \InvalidArgumentException If the option you're trying to set is invalid.
-     * @throws \InvalidArgumentException When setting option 'headTag' to an invalid value.
+     * @throws \OutOfBoundsException If the option you're trying to set is invalid.
+     * @throws \OutOfRangeException When setting option 'headTag' to an invalid value.
+     * @throws \DigiLive\GitChangelog\GitChangelogException If fetching the repository tags fails.
      * @see GitChangelog::$options
      * @see GitChangelog::fetchTags()
      */
@@ -532,11 +528,11 @@ class GitChangelog
 
         foreach ($name as $option => $value) {
             if (!array_key_exists($option, $this->options)) {
-                throw new \InvalidArgumentException("Attempt to set an invalid option: $option!");
+                throw new \OutOfBoundsException("Attempt to set an invalid option: $option!");
             }
 
             if ('headTagName' == $option && in_array($value, $this->fetchTags())) {
-                throw new \InvalidArgumentException("Attempt to set $option to an already existing tag value!");
+                throw new \OutOfRangeException('Attempt to set option headTagName to an already existing tag value!');
             }
 
             $this->options[$option] = $value;
