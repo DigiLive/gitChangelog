@@ -389,14 +389,12 @@ class GitChangelog
      *
      * Optionally the generated changelog is appended with the content of property GitChangelog::$baseContent.
      *
-     * @SuppressWarnings(PHPMD.ErrorControlOperator)
-     *
-     * @param   bool  $append  [Optional] Set to true to append the changelog with base content.
+     * @param   bool  $append  Set to true to append the changelog with base content.
      *
      * @return string The generated changelog, optionally followed by base content.
      * @see GitChangelog::$baseContent
      */
-    public function get(bool $append = false): string
+    public function get(bool $append): string
     {
         return $this->changelog . ($append ? $this->baseContent : '');
     }
