@@ -82,7 +82,7 @@ class MarkDown extends GitChangelog implements RendererInterface
     /**
      * @var int Current amount of reference links in the changelog.
      */
-    private $linkCount;
+    private $linkCount = 0;
 
     /**
      * Generate the changelog.
@@ -93,10 +93,10 @@ class MarkDown extends GitChangelog implements RendererInterface
      */
     public function build(): void
     {
-        $logContent      = "# {$this->options['logHeader']}\n";
         $commitData      = $this->fetchCommitData();
         $this->links     = [];
         $this->linkCount = 0;
+        $logContent      = "# {$this->options['logHeader']}\n";
 
         if (!$commitData) {
             $this->changelog = "$logContent\n{$this->options['noChangesMessage']}\n";
@@ -110,7 +110,8 @@ class MarkDown extends GitChangelog implements RendererInterface
 
         foreach ($commitData as $tag => $data) {
             $logContent .= "\n";
-            // Add tag header and date to log.
+
+            // Define the tag title and date, format and add them to the changelog.
             $tagData = [$tag, $data['date']];
             if ('' === $tag) {
                 $tagData = [$this->options['headTagName'], $this->options['headTagDate']];
@@ -119,6 +120,7 @@ class MarkDown extends GitChangelog implements RendererInterface
             $logContent .= str_replace(['{tag}', '{date}'], $tagData, $this->formatTag) . "\n\n";
 
             // No titles present for this tag.
+            // Add a "No changes" messages to the changelog for the current tag and proceed with the next tag.
             if (!$data['titles']) {
                 $logContent .= rtrim(
                     str_replace(['{title}', '{hashes}'], [$this->options['noChangesMessage'], ''], $this->formatTitle)
@@ -127,44 +129,41 @@ class MarkDown extends GitChangelog implements RendererInterface
                 continue;
             }
 
-            // Sort commit titles.
+            // Sort commit titles of the current tag.
             Utilities::natSort($data['titles'], $this->options['titleOrder']);
 
-            // Add commit titles to log.
+            // Add commit titles of the current tag to the changelog.
             $tagContent = '';
             foreach ($data['titles'] as $titleKey => &$title) {
+                // Format issue identifiers of the current commit title into an url, if the url is defined.
                 if (null !== $this->issueUrl) {
-                    // phpcs:disable Security.BadFunctions.EasyRFI
-                    // https://stackoverflow.com/questions/3115559/exploitable-php-functions
                     $title = preg_replace_callback(
                         '/#(\d+)/',
-                        function ($matches) {
+                        function ($matches): string {
                             $this->links[] = str_replace('{issue}', $matches[1], $this->issueUrl);
 
-                            return "[$matches[0]][" . $this->linkCount++ . ']';
+                            return "[$matches[0]][{linkIndex}]";
                         },
                         $title
                     );
-                    // phpcs:enable
                 }
 
+                // Format the current commit title and corresponding hashes and add them to the changelog.
                 $tagContent .= rtrim(
                     str_replace(
                         ['{title}', '{hashes}'],
                         [$title, $this->formatHashes($data['hashes'][$titleKey])],
                         $this->formatTitle
                     )
-                ) . "\n";
+                );
+                $tagContent .= "\n";
             }
 
             $logContent .= $this->wordWrap($tagContent);
         }
 
-        // Render links.
-        $logContent .= "\n";
-        foreach ($this->links as $index => $link) {
-            $logContent .= "[$index]:$link\n";
-        }
+        // Inject reference links into the changelog.
+        $logContent = $this->injectLinks($logContent);
 
         $this->changelog = $logContent;
     }
@@ -172,15 +171,16 @@ class MarkDown extends GitChangelog implements RendererInterface
     /**
      * Format the hashes of a commit title into a string.
      *
-     * Each hash is formatted into a link as defined by property commitUrl.
-     * After formatting, all hashes are concatenated to a single line, comma separated.
-     * Finally, this line is formatted as defined by property formatHashes.
+     * Each hash is formatted into a reference link.
+     * The referenced link is formatted as defined by property GitChangelog::$commitUrl and stored into property
+     * GitChangelog::$links.
+     * After formatting, all hashes are concatenated to a single string with a comma and surrounded parenthesis.
      *
-     * @param   array  $hashes  Hashes to format
+     * @param   array  $hashes  The hashes to format.
      *
-     * @return string Formatted hash string.
+     * @return string A formatted hash string.
      * @see GitChangelog::$commitUrl
-     * @see GitChangelog::$formatHashes
+     * @see GitChangelog::$links
      */
     protected function formatHashes(array $hashes): string
     {
@@ -191,7 +191,7 @@ class MarkDown extends GitChangelog implements RendererInterface
         if (null !== $this->commitUrl) {
             foreach ($hashes as &$hash) {
                 $this->links[] = str_replace('{hash}', $hash, $this->commitUrl);
-                $hash          = "[$hash][" . $this->linkCount++ . ']';
+                $hash          = "[$hash][{linkIndex}]";
             }
 
             unset($hash);
@@ -217,5 +217,62 @@ class MarkDown extends GitChangelog implements RendererInterface
         }
 
         return $wrappedContent;
+    }
+
+    /**
+     * Injects reference links into a string.
+     *
+     * Basically it replaces the {linkIndex} placeholders with an index number and adds a reference link at the end of
+     * the string.
+     *
+     * @param   string  $content  The string to inject the reference links into.
+     *
+     * @return string The content with the injected reference links.
+     */
+    private function injectLinks(string $content): string
+    {
+        // Convert content into an array of lines.
+        $content   = preg_split('/\R/', $content);
+        $links     = $this->links;
+        $linkIndex = $this->linkCount;
+        $pattern   = '/{linkIndex}/';
+
+        // Reverse the content, links and search pattern at descending tag order.
+        if ($this->options['tagOrderDesc']) {
+            $content = array_reverse($content);
+            $links   = array_values(array_reverse($this->links));
+            $pattern = strrev($pattern);
+        }
+
+        // Replace placeholders with an index.
+        foreach ($content as &$line) {
+            // Reverse the order of the characters in the line at descending tag order.
+            $line = $this->options['tagOrderDesc'] ? strrev($line) : $line;
+            $line = preg_replace_callback(
+                $pattern,
+                function () use (&$linkIndex): string {
+                    return $this->options['tagOrderDesc'] ? strrev((string) $linkIndex++) : (string) $linkIndex++;
+                },
+                $line
+            );
+            // Restore the character order of the line.
+            $line = $this->options['tagOrderDesc'] ? strrev($line) : $line;
+        }
+        unset($line);
+
+        // Restore the order of the content at descending tag order.
+        if ($this->options['tagOrderDesc']) {
+            $content = array_reverse($content);
+        }
+
+        // Restore the order of the content and convert it back to a string.
+        $content = implode("\n", $content) . "\n";
+
+        // Append the indexed reference links to the content.
+        foreach ($links as $index => $link) {
+            $content .= "[$index]:$link\n";
+        }
+
+        return $content;
     }
 }
