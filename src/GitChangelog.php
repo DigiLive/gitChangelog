@@ -221,7 +221,7 @@ class GitChangelog
 
             // Cache requested git tags. $this->gitTags = [newest..oldest].
             $this->gitTags = array_slice($this->gitTags, $toKey, $length);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new GitChangelogException('An error occurred while fetching the tags from the repository!');
         }
 
