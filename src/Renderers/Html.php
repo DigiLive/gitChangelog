@@ -50,7 +50,6 @@ class Html extends GitChangelog implements RendererInterface
 {
     use RendererTrait;
 
-
     /**
      * Generate the changelog.
      *
