@@ -33,8 +33,6 @@
  *
  */
 
-/** @noinspection PhpUnhandledExceptionInspection */
-
 declare(strict_types=1);
 
 namespace DigiLive\GitChangelog\Tests;
@@ -440,6 +438,7 @@ class GitChangelogTest extends TestCase
      * Test if saving the changelog throws an exception when writing to a non-writable file.
      *
      * @return void
+     * @throws \DigiLive\GitChangelog\GitChangelogException
      */
     public function testSaveThrowsExceptionOnNonWritableFile(): void
     {

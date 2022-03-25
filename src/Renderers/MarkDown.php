@@ -3,7 +3,7 @@
 /*
  * BSD 3-Clause License
  *
- * Copyright (c) 2020, Ferry Cools (DigiLive)
+ * Copyright (c) 2022, Ferry Cools (DigiLive)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,28 +48,8 @@ use DigiLive\GitChangelog\Utilities;
  */
 class MarkDown extends GitChangelog implements RendererInterface
 {
-    /**
-     * @var string Format of tag strings. {tag} is replaced by the tags found in the git log, {date} is replaced by the
-     *             corresponding tag date.
-     */
-    public $formatTag = '## {tag} ({date})';
-    /**
-     * @var string Format of titles. {title} is replaced by commit titles, {hashes} is replaced by the formatted
-     *             commit hashes.
-     */
-    public $formatTitle = '* {title} {hashes}';
-    /**
-     * @var string Url to commit view of the remote repository. If set, hashes of commit titles are converted into
-     *             links which refer to the corresponding commit at the remote.
-     *             {hash} is replaced by the commits hash id.
-     */
-    public $commitUrl;
-    /**
-     * @var string Url to Issue tracker of the repository. If set, issue references in commit title are converted into
-     *             links which refers to the corresponding issue at the tracker.
-     *             {issue} is replaced by the issue number.
-     */
-    public $issueUrl;
+    use RendererTrait;
+
     /**
      * @var int Maximum length of the commit titles. Longer titles are word-wrapped, so they won't exceed this maximum.
      */
@@ -79,10 +59,6 @@ class MarkDown extends GitChangelog implements RendererInterface
      * @var array Urls of the reference links currently in the changelog.
      */
     private $links = [];
-    /**
-     * @var int Current amount of reference links in the changelog.
-     */
-    private $linkCount = 0;
 
     /**
      * Generate the changelog.
@@ -95,7 +71,6 @@ class MarkDown extends GitChangelog implements RendererInterface
     {
         $commitData      = $this->fetchCommitData();
         $this->links     = [];
-        $this->linkCount = 0;
         $logContent      = "# {$this->options['logHeader']}\n";
 
         if (!$commitData) {
@@ -104,7 +79,7 @@ class MarkDown extends GitChangelog implements RendererInterface
             return;
         }
 
-        if (!$this->options['tagOrderDesc']) {
+        if ('asc' == $this->options['tagOrder']) {
             $commitData = array_reverse($commitData);
         }
 
@@ -114,16 +89,21 @@ class MarkDown extends GitChangelog implements RendererInterface
             // Define the tag title and date, format and add them to the changelog.
             $tagData = [$tag, $data['date']];
             if ('' === $tag) {
+                // Tag is HEAD revision.
                 $tagData = [$this->options['headTagName'], $this->options['headTagDate']];
             }
 
-            $logContent .= str_replace(['{tag}', '{date}'], $tagData, $this->formatTag) . "\n\n";
+            $logContent .= str_replace(['{tag}', '{date}'], $tagData, $this->formats['tag']) . "\n\n";
 
-            // No titles present for this tag.
-            // Add a "No changes" messages to the changelog for the current tag and proceed with the next tag.
             if (!$data['titles']) {
+                // No commit titles present for this tag.
+                // Add a "No changes" messages to the changelog for the current tag and proceed with the next tag.
                 $logContent .= rtrim(
-                    str_replace(['{title}', '{hashes}'], [$this->options['noChangesMessage'], ''], $this->formatTitle)
+                    str_replace(
+                        ['{title}', '{hashes}'],
+                        [$this->options['noChangesMessage'], ''],
+                        $this->formats['title']
+                    )
                 );
                 $logContent .= "\n";
                 continue;
@@ -134,26 +114,17 @@ class MarkDown extends GitChangelog implements RendererInterface
 
             // Add commit titles of the current tag to the changelog.
             $tagContent = '';
-            foreach ($data['titles'] as $titleKey => &$title) {
-                // Format issue identifiers of the current commit title into an url, if the url is defined.
-                if (null !== $this->issueUrl) {
-                    $title = preg_replace_callback(
-                        '/#(\d+)/',
-                        function ($matches): string {
-                            $this->links[] = str_replace('{issue}', $matches[1], $this->issueUrl);
-
-                            return "[$matches[0]][{linkIndex}]";
-                        },
-                        $title
-                    );
-                }
+            foreach ($data['titles'] as $titleKey => $title) {
+                // Convert issue and merge-request references into reference links.
+                $title = $this->convertReferences($title, 'issue');
+                $title = $this->convertReferences($title, 'mergeRequest');
 
                 // Format the current commit title and corresponding hashes and add them to the changelog.
                 $tagContent .= rtrim(
                     str_replace(
                         ['{title}', '{hashes}'],
                         [$title, $this->formatHashes($data['hashes'][$titleKey])],
-                        $this->formatTitle
+                        $this->formats['title']
                     )
                 );
                 $tagContent .= "\n";
@@ -166,6 +137,33 @@ class MarkDown extends GitChangelog implements RendererInterface
         $logContent = $this->injectLinks($logContent);
 
         $this->changelog = $logContent;
+    }
+
+    /**
+     * Convert issue or merge-request references in a line to a reference link.
+     *
+     * @param   string  $line           Line to convert.
+     * @param   string  $referenceType  'issue' or 'mergeRequest'.
+     *
+     * @return string The line with converted issue or merge-request references.
+     */
+    private function convertReferences(string $line, string $referenceType): string
+    {
+        if ($this->urls[$referenceType]) {
+            $line = preg_replace_callback(
+                $this->patterns[$referenceType],
+                function ($matches) use ($referenceType) {
+                    /** @noinspection PhpUnnecessaryCurlyVarSyntaxInspection */
+                    // @see https://youtrack.jetbrains.com/issue/WI-60248
+                    $this->links[] = str_replace("{{$referenceType}}", $matches[1], $this->urls[$referenceType]);
+
+                    return "[$matches[0]][{linkIndex}]";
+                },
+                $line
+            );
+        }
+
+        return $line;
     }
 
     /**
@@ -188,18 +186,16 @@ class MarkDown extends GitChangelog implements RendererInterface
             return '';
         }
 
-        if (null !== $this->commitUrl) {
+        if ($this->urls['commit']) {
             foreach ($hashes as &$hash) {
-                $this->links[] = str_replace('{hash}', $hash, $this->commitUrl);
+                $this->links[] = str_replace('{commit}', $hash, $this->urls['commit']);
                 $hash          = "[$hash][{linkIndex}]";
             }
 
             unset($hash);
         }
 
-        $hashes = implode(', ', $hashes);
-
-        return "($hashes)";
+        return '(' . implode(', ', $hashes) . ')';
     }
 
     /**
@@ -234,34 +230,34 @@ class MarkDown extends GitChangelog implements RendererInterface
         // Convert content into an array of lines.
         $content   = preg_split('/\R/', $content);
         $links     = $this->links;
-        $linkIndex = $this->linkCount;
+        $linkIndex = 0;
         $pattern   = '/{linkIndex}/';
 
         // Reverse the content, links and search pattern at descending tag order.
-        if ($this->options['tagOrderDesc']) {
+        if ('desc' == $this->options['tagOrder']) {
             $content = array_reverse($content);
-            $links   = array_values(array_reverse($this->links));
+            $links   = array_values(array_reverse($links));
             $pattern = strrev($pattern);
         }
 
         // Replace placeholders with an index.
         foreach ($content as &$line) {
             // Reverse the order of the characters in the line at descending tag order.
-            $line = $this->options['tagOrderDesc'] ? strrev($line) : $line;
+            $line = 'desc' == $this->options['tagOrder'] ? strrev($line) : $line;
             $line = preg_replace_callback(
                 $pattern,
                 function () use (&$linkIndex): string {
-                    return $this->options['tagOrderDesc'] ? strrev((string) $linkIndex++) : (string) $linkIndex++;
+                    return 'desc' == $this->options['tagOrder'] ? strrev((string) $linkIndex++) : (string) $linkIndex++;
                 },
                 $line
             );
             // Restore the character order of the line.
-            $line = $this->options['tagOrderDesc'] ? strrev($line) : $line;
+            $line = 'desc' == $this->options['tagOrder'] ? strrev($line) : $line;
         }
         unset($line);
 
         // Restore the order of the content at descending tag order.
-        if ($this->options['tagOrderDesc']) {
+        if ('desc' == $this->options['tagOrder']) {
             $content = array_reverse($content);
         }
 

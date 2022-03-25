@@ -3,7 +3,7 @@
 /*
  * BSD 3-Clause License
  *
- * Copyright (c) 2020, Ferry Cools (DigiLive)
+ * Copyright (c) 2022, Ferry Cools (DigiLive)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@ declare(strict_types=1);
 namespace DigiLive\GitChangelog\Renderers;
 
 /**
- * Interface RendererInterface
+ * Interface RendererInterface.
  *
  * To be used for creating a custom GitChangelog renderer.
  * The custom renderer is expected to extend GitChangelog and implement this interface.
@@ -51,9 +51,9 @@ interface RendererInterface
      * Generate a changelog.
      *
      * The purpose of this method is to generate a changelog for GitChangelog.
-     * This generated changelog is expected be stored into GitChangelog::$changelog.
+     * This generated changelog is expected be stored into \DigiLive\GitChangelog\GitChangelog::$changelog
      *
-     * @see GitChangelog::$changelog
+     * @see \DigiLive\GitChangelog\GitChangelog::$changelog
      */
     public function build(): void;
 }

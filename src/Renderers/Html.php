@@ -3,7 +3,7 @@
 /*
  * BSD 3-Clause License
  *
- * Copyright (c) 2020, Ferry Cools (DigiLive)
+ * Copyright (c) 2022, Ferry Cools (DigiLive)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,18 +48,8 @@ use DigiLive\GitChangelog\Utilities;
  */
 class Html extends GitChangelog implements RendererInterface
 {
-    /**
-     * @var string Url to commit view of the remote repository. If set, hashes of commit titles are converted into
-     *             links which refer to the corresponding commit at the remote.
-     *             {hash} is replaced by the commits hash id.
-     */
-    public $commitUrl;
-    /**
-     * @var string Url to Issue tracker of the repository. If set, issue references in commit title are converted into
-     *             links which refer to the corresponding issue at the tracker.
-     *             {issue} is replaced by the issue number.
-     */
-    public $issueUrl;
+    use RendererTrait;
+
 
     /**
      * Generate the changelog.
@@ -70,17 +60,17 @@ class Html extends GitChangelog implements RendererInterface
      */
     public function build(): void
     {
-        $logContent = "<h1>{$this->options['logHeader']}</h1>";
+        $logContent = "<h1>{$this->options['logHeader']}</h1>\n";
 
         $commitData = $this->fetchCommitData();
 
         if (!$commitData) {
-            $this->changelog = "$logContent<p>{$this->options['noChangesMessage']}</p>";
+            $this->changelog = "$logContent<p>{$this->options['noChangesMessage']}</p>\n";
 
             return;
         }
 
-        if (!$this->options['tagOrderDesc']) {
+        if ('asc' == $this->options['tagOrder']) {
             $commitData = array_reverse($commitData);
         }
 
@@ -91,34 +81,54 @@ class Html extends GitChangelog implements RendererInterface
                 $data['date'] = $this->options['headTagDate'];
             }
 
-            $logContent .= "<h2>$tag ({$data['date']})</h2><ul>";
+            $logContent .= "\n<h2>$tag ({$data['date']})</h2>\n<ul>\n";
 
-            // No titles present for this tag.
+            // No commit titles present for this tag.
             if (!$data['titles']) {
-                $logContent .= "<li>{$this->options['noChangesMessage']}</li></ul>";
+                $logContent .= "    <li>{$this->options['noChangesMessage']}</li>\n</ul>\n";
                 continue;
             }
 
             // Sort commit titles.
             Utilities::natSort($data['titles'], $this->options['titleOrder']);
 
-            // Add commit titles.
+            // Add commit titles to changelog.
             foreach ($data['titles'] as $titleKey => $title) {
-                if ($this->issueUrl !== null) {
-                    $title = preg_replace(
-                        '/#(\d+)/',
-                        '<a href="' . str_replace('{issue}', '$1', $this->issueUrl) . '">$0</a>',
-                        $title
-                    );
-                }
+                // Convert issue and merge-request references into links.
+                $title = $this->convertReferences($title, 'issue');
+                $title = $this->convertReferences($title, 'mergeRequest');
 
-                $logContent .= "<li>$title " . $this->formatHashes($data['hashes'][$titleKey]) . '</li>';
+                // Format commit title and hashes.
+                $logContent .= "    <li>$title " . $this->formatHashes($data['hashes'][$titleKey]) . "</li>\n";
             }
 
-            $logContent .= '</ul>';
+            $logContent .= "</ul>\n";
         }
 
         $this->changelog = $logContent;
+    }
+
+    /**
+     * Convert issue or merge-request references in a line to a reference link.
+     *
+     * @param   string  $line           Line to convert.
+     * @param   string  $referenceType  'issue' or 'mergeRequest'.
+     *
+     * @return string The line with converted issue or merge-request references.
+     */
+    private function convertReferences(string $line, string $referenceType): string
+    {
+        if ($this->urls[$referenceType]) {
+            /** @noinspection PhpUnnecessaryCurlyVarSyntaxInspection */
+            // @see https://youtrack.jetbrains.com/issue/WI-60248
+            $line = preg_replace(
+                $this->patterns[$referenceType],
+                '<a href="' . str_replace("{{$referenceType}}", '$1', $this->urls[$referenceType]) . '">$0</a>',
+                $line
+            );
+        }
+
+        return $line;
     }
 
     /**
@@ -138,9 +148,9 @@ class Html extends GitChangelog implements RendererInterface
             return '';
         }
 
-        if (null !== $this->commitUrl) {
+        if (null !== $this->urls['commit']) {
             foreach ($hashes as &$hash) {
-                $hash = '<a href="' . str_replace('{hash}', $hash, $this->commitUrl) . "\">$hash</a>";
+                $hash = '<a href="' . str_replace('{commit}', $hash, $this->urls['commit']) . "\">$hash</a>";
             }
 
             unset($hash);
