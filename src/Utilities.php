@@ -47,7 +47,7 @@ class Utilities
     /**
      * Sort an array using a “natural order” algorithm.
      *
-     * The sorting order can be defined as  'ASC' or 'DESC'.
+     * The sorting order can be defined as  'asc' or 'desc' (case insensitive).
      * For any other value, the array will remain unchanged.
      *
      * @param   array   $array  The input array.
@@ -55,11 +55,11 @@ class Utilities
      */
     public static function natSort(array &$array, string $order): void
     {
-        switch ($order) {
-            case 'ASC':
+        switch (strtolower($order)) {
+            case 'asc':
                 natsort($array);
                 break;
-            case 'DESC':
+            case 'desc':
                 natsort($array);
                 $array = array_reverse($array, true);
         }
