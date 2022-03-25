@@ -204,14 +204,9 @@ class GitChangelog
         }
 
         $this->gitTags = [];
-        $command       = [$this->gitExecutable];
-        if ($this->repoPath) {
-            array_push($command, '--git-dir', "$this->repoPath.git");
-        }
-        array_push($command, 'tag', '--sort', "-{$this->options['tagOrderBy']}");
 
         try {
-            $this->gitTags = $this->runCommand($command, true);
+            $this->gitTags = $this->runGitCommand(['tag', '--sort', "-{$this->options['tagOrderBy']}"], true);
 
             // Add HEAD revision as tag.
             if (null === $this->toTag) {
@@ -234,20 +229,26 @@ class GitChangelog
     }
 
     /**
-     * Run a command to fetch data from the repository en get the output (STDOUT).
+     * Run a git command to fetch data from the repository en get the output (STDOUT).
      *
      * If returning an array, each element will contain one line of the trimmed output.
      *
      * Note: Command arguments with an empty value are removed from the argument list.
      *
-     * @param   array  $command  The command to run and its arguments listed as separate entries
-     * @param   bool   $asArray  True to return the output as an array, False to return the output as a string.
+     * @param   array  $arguments  The command arguments, listed as separate entries.
+     * @param   bool   $asArray    True to return the output as an array, False to return the output as a string.
      *
      * @return array|string The output (STDOUT) of the process.
      * @throws \DigiLive\GitChangelog\GitChangelogException When the process didn't terminate successfully.
      */
-    private function runCommand(array $command, bool $asArray)
+    private function runGitCommand(array $arguments, bool $asArray)
     {
+        $command = [$this->gitExecutable];
+        if ($this->repoPath) {
+            array_push($command, '--git-dir', "$this->repoPath.git");
+        }
+        $command = array_merge($command, $arguments);
+
         $process = new Process(array_values(array_filter($command)));
 
         try {
@@ -314,29 +315,19 @@ class GitChangelog
             $tagRange   = false !== $rangeStart ? "$rangeStart..$tag" : "$tag";
 
             // Fetch tag dates.
-            $command = [$this->gitExecutable];
-            if ($this->repoPath) {
-                array_push($command, '--git-dir', "$this->repoPath.git");
-            }
-            array_push($command, 'log', '-1', '--pretty=format:%ad', '--date=short', $tag);
-
-            $commitData[$tag]['date'] = $this->runCommand($command, false);
+            $commitData[$tag]['date'] =
+                $this->runGitCommand(['log', '-1', '--pretty=format:%ad', '--date=short', $tag], false);
 
             // Fetch commit titles.
-            $command = [$this->gitExecutable];
-            if ($this->repoPath) {
-                array_push($command, '--git-dir', "$this->repoPath.git");
-            }
-            array_push($command, 'log', $tagRange, '--pretty=format:%s', '--date=short', $includeMerges);
-            $commitData[$tag]['titles'] = $this->runCommand($command, true);
+            $commitData[$tag]['titles'] =
+                $this->runGitCommand(
+                    ['log', $tagRange, '--pretty=format:%s', '--date=short', $includeMerges],
+                    true
+                );
 
             // Fetch commit hashes.
-            $command = [$this->gitExecutable];
-            if ($this->repoPath) {
-                array_push($command, '--git-dir', "$this->repoPath.git");
-            }
-            array_push($command, 'log', $tagRange, '--pretty=format:%h', $includeMerges);
-            $commitData[$tag]['hashes'] = $this->runCommand($command, true);
+            $commitData[$tag]['hashes'] =
+                $this->runGitCommand(['log', $tagRange, '--pretty=format:%h', $includeMerges], true);
         }
 
         // Cache commit data and process it.
