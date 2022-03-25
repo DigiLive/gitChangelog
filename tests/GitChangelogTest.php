@@ -1,11 +1,9 @@
 <?php
 
-/** @noinspection PhpUnhandledExceptionInspection */
-
 /*
  * BSD 3-Clause License
  *
- * Copyright (c) 2020, Ferry Cools (DigiLive)
+ * Copyright (c) 2022, Ferry Cools (DigiLive)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,183 +33,215 @@
  *
  */
 
+/** @noinspection PhpUnhandledExceptionInspection */
+
 declare(strict_types=1);
 
 namespace DigiLive\GitChangelog\Tests;
 
 use DigiLive\GitChangelog\GitChangelog;
 use DigiLive\GitChangelog\GitChangelogException;
-use Exception;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 use stdClass;
 
 /**
- * Class GitChangelogTest
- *
  * PHPUnit tests of class GitChangelog.
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
- *
- * @package DigiLive\GitChangelog\Tests
  */
 class GitChangelogTest extends TestCase
 {
+    use ReflectionTrait;
+
     /**
-     * set up test environment
+     * @var \DigiLive\GitChangelog\GitChangelog The object that will be tested against.
+     */
+    private $changelog;
+
+    /**
+     * Set up each test case.
+     *
+     * @return void
      */
     public function setUp(): void
     {
         vfsStream::setup('testFolder', null, ['baseLog.md' => 'Base Log Content']);
+        $this->changelog = new GitChangelog();
     }
 
-    public function testFetchTagsCached()
+    /**
+     * Test fetching the cached repository tags.
+     *
+     * The first tag should always be null which represents the HEAD revision of the repository.
+     *
+     * @return void
+     * @throws \DigiLive\GitChangelog\GitChangelogException When fetching the tags fails.
+     */
+    public function testFetchTagsCached(): void
     {
-        $changelog = new GitChangelog();
-
-        $tags = $changelog->fetchTags();
+        $tags = $this->changelog->fetchTags();
         $this->assertNull(reset($tags));
     }
 
-    public function testFetchTagsUncached()
+    /**
+     * Test re-fetching the tags from the repository.
+     *
+     * @return void
+     * @throws \DigiLive\GitChangelog\GitChangelogException When fetching the tags fails.
+     * @throws \ReflectionException If property GitChangelog::$gitTags doesn't exist.
+     */
+    public function testFetchTagsUncached(): void
     {
-        $changelog = new GitChangelog();
-        $this->setPrivateProperty($changelog, 'gitTags', [null, 'dummyTag']);
-        $changelog->setFromTag('');
+        // Set dummy values as pre-fetched tags.
+        $this->setPrivateProperty($this->changelog, 'gitTags', [null, 'dummyTag']);
+        // Request HEAD only. '' is cast to null when searching for the tag.
+        $this->changelog->setFromTag('');
 
-        $this->assertSame([null], $changelog->fetchTags(true));
-    }
-
-    public function testFetchTagsThrowsExceptionOnInvalidFromTag()
-    {
-        $changelog = new GitChangelog();
-        $this->setPrivateProperty($changelog, 'fromTag', 'notExisting');
-
-        $this->expectException(Exception::class);
-        $changelog->fetchTags(true);
+        // Expect only the HEAD revision.
+        $this->assertSame([null], $this->changelog->fetchTags(true));
     }
 
     /**
-     * Sets a private or protected property on a given object via reflection
-     *
-     * @param   object  $object    - Instance in which the private or protected value is being modified.
-     * @param   string  $property  - Property of instance which is being modified.
-     * @param           $value     - New value of the property which is being modified.
+     * Test if fetching tags from the repository fails when the from-tag doesn't exist.
      *
      * @return void
-     * @throws \ReflectionException If no property exists by that name.
+     * @throws \DigiLive\GitChangelog\GitChangelogException When fetching the tags fails.
+     * @throws \ReflectionException If property GitChangelog::$fromTag doesn't exist.
      */
-    private function setPrivateProperty(object $object, string $property, $value): void
+    public function testFetchTagsThrowsExceptionOnInvalidFromTag(): void
     {
-        $reflection         = new ReflectionClass($object);
-        $reflectionProperty = $reflection->getProperty($property);
+        // Set from-tag to non-existing repository tag.
+        $this->setPrivateProperty($this->changelog, 'fromTag', 'notExisting');
 
-        $reflectionProperty->setAccessible(true);
-        $reflectionProperty->setValue($object, $value);
+        $this->expectException(GitChangelogException::class);
+        $this->changelog->fetchTags(true);
     }
 
-    public function testFetchTagsTrowsExceptionOnInvalidToTag()
+    /**
+     * Test if fetching tags from the repository fails when the to-tag doesn't exist.
+     *
+     * @return void
+     * @throws \DigiLive\GitChangelog\GitChangelogException When fetching the tags fails.
+     * @throws \ReflectionException If property GitChangelog::$toTag doesn't exist.
+     */
+    public function testFetchTagsTrowsExceptionOnInvalidToTag(): void
     {
-        $changelog = new GitChangelog();
-        $this->setPrivateProperty($changelog, 'toTag', 'notExisting');
+        // Set to-tag to non-existing repository tag.
+        $this->setPrivateProperty($this->changelog, 'toTag', 'notExisting');
 
-        $this->expectException(Exception::class);
-        $changelog->fetchTags(true);
+        $this->expectException(GitChangelogException::class);
+        $this->changelog->fetchTags(true);
     }
 
-    public function testGet()
+    /**
+     * Test getting the content of the changelog.
+     *
+     * Tested for content:
+     * - without base content.
+     * - with base content.
+     * - with base content from a file.
+     * - with base content from an unreadable file.
+     *
+     * @return void
+     * @throws \ReflectionException If property GitChangelog::$changelog doesn't exist.
+     */
+    public function testGet(): void
     {
-        $changeLog    = new GitChangelog();
+        // Set the changelog content to a dummy value.
         $dummyContent = 'Dummy Content';
-        $this->setPrivateProperty($changeLog, 'changelog', $dummyContent);
+        $this->setPrivateProperty($this->changelog, 'changelog', $dummyContent);
 
         // Test without base content.
-        $this->assertequals($dummyContent, $changeLog->get(false));
+        $this->assertequals($dummyContent, $this->changelog->get(false));
 
         // Test with base content
-        $changeLog->setBaseContent($dummyContent);
-        $this->assertequals($dummyContent . $dummyContent, $changeLog->get(true));
+        $this->changelog->setBaseContent($dummyContent);
+        $this->assertequals($dummyContent . $dummyContent, $this->changelog->get(true));
 
-        // Test with base content from file.
+        // Setup base content from a file.
         $baseFilePath    = vfsStream::url('testFolder/baseLog.md');
         $baseFileContent = file_get_contents($baseFilePath);
 
-        $changeLog->setBaseContent($baseFilePath);
-        $this->assertequals($dummyContent . $baseFileContent, $changeLog->get(true));
+        // Test with base content from a file.
+        $this->changelog->setBaseContent($baseFilePath);
+        $this->assertequals($dummyContent . $baseFileContent, $this->changelog->get(true));
 
         // Test with content of unreadable file.
+        // Filepath is treated as a string and appended to the changelog.
         chmod($baseFilePath, 0000);
-        $changeLog->setBaseContent($baseFilePath);
-        $this->assertequals($dummyContent . $baseFilePath, $changeLog->get(true));
-    }
-
-    public function testSetLabels()
-    {
-        $changeLog = new GitChangelog();
-
-        // Test with string parameters.
-        $changeLog->setLabels('label1', 'label2');
-        self::assertEquals(['label1', 'label2'], $this->getPrivateProperty($changeLog, 'labels'));
-
-        // Remove all labels.
-        $changeLog->setLabels();
-
-        // Test with array parameter.
-        $changeLog->setLabels('label1', 'label2');
-        self::assertEquals(['label1', 'label2'], $this->getPrivateProperty($changeLog, 'labels'));
+        $this->changelog->setBaseContent($baseFilePath);
+        $this->assertequals($dummyContent . $baseFilePath, $this->changelog->get(true));
     }
 
     /**
-     * Get a private or protected property on a given object via reflection
+     * Test setting the labels to include into the changelog.
      *
-     * @param   object  $object    - Instance in which the private or protected property exists.
-     * @param   string  $property  - Property of instance which is being read.
+     * Tested against:
+     * - Multiple parameters.
+     * - No parameters.
+     * - One unpacked array parameter.
      *
-     * @return mixed The value of the property.
-     * @throws \ReflectionException If no property exists by that name.
+     * @return void
+     * @throws \ReflectionException If property GitChangelog::$labels doesn't exist.
      */
-    private function getPrivateProperty(object $object, string $property)
+    public function testSetLabels(): void
     {
-        $reflection         = new ReflectionClass($object);
-        $reflectionProperty = $reflection->getProperty($property);
+        // Test with string parameters.
+        $this->changelog->setLabels('label1', 'label2');
+        self::assertSame(['label1', 'label2'], $this->getPrivateProperty($this->changelog, 'labels'));
 
-        $reflectionProperty->setAccessible(true);
+        // Remove all labels.
+        $this->changelog->setLabels();
+        self::assertSame([], $this->getPrivateProperty($this->changelog, 'labels'));
 
-        return $reflectionProperty->getValue($object);
+        // Test with array parameter.
+        $labels = ['label1', 'label2'];
+        $this->changelog->setLabels(...$labels);
+        self::assertSame(['label1', 'label2'], $this->getPrivateProperty($this->changelog, 'labels'));
     }
 
-    public function testSetLabelsRaisesNotice()
+    /**
+     * Test if setting labels raises a notice/warning when passed a packed array parameter.
+     *
+     * @return void
+     */
+    public function testSetLabelsRaisesNotice(): void
     {
-        $changeLog = new GitChangelog();
-
         $this->expectNotice(); // PHP version ^7.3
         if (version_compare(PHP_VERSION, '8.0.0') >= 0) {
             $this->expectWarning();  // PHP version ^8
         }
         /** @noinspection PhpParamsInspection */
-        $changeLog->setLabels([]);
+        $this->changelog->setLabels([]);
     }
 
-    public function testSetLabelsRaisesError()
+    /**
+     * Test if setting labels raises an error when passed an object that doesn't implement the __toString() method
+     *
+     * @return void
+     */
+    public function testSetLabelsRaisesError(): void
     {
-        $changeLog = new GitChangelog();
-
         $this->expectException(\Error::class);
         /** @noinspection PhpParamsInspection */
-        $changeLog->setLabels(new stdClass());
+        $this->changelog->setLabels(new stdClass());
     }
 
-    public function testFetchCommitData()
+    /**
+     * Test if property GitChangelog::$commitData is properly constructed.
+     *
+     * @return void
+     * @throws \DigiLive\GitChangelog\GitChangelogException When fetching the repository tags fails.
+     */
+    public function testFetchCommitData(): void
     {
-        $changeLog = new GitChangelog();
-
         // Test the format of fetched commit data.
-        // The first loop check the fetched data while the second loop checks the cached data.
+        // The first loop checks the fetched data while the second loop checks the cached data.
         $loopCount = 0;
         do {
             $loopCount++;
-            $commitData   = $changeLog->fetchCommitData();
+            $commitData   = $this->changelog->fetchCommitData();
             $firstElement = reset($commitData);
 
             $this->assertSame('', key($commitData));
@@ -223,32 +253,42 @@ class GitChangelogTest extends TestCase
         } while ($loopCount < 2);
     }
 
-    public function testSetFromTag()
+    /**
+     * Test setting the from-tag property.
+     *
+     * Tested against:
+     * - A valid value.
+     * - No value.
+     * - An invalid value.
+     *
+     * @return void
+     * @throws \ReflectionException If property GitChangelog::$fromTag doesn't exist.
+     */
+    public function testSetFromTag(): void
     {
-        $changeLog = new GitChangelog();
-
         // Test setting tag value.
-        $changeLog->setFromTag('');
-        $this->assertEquals('', $this->getPrivateProperty($changeLog, 'fromTag'));
+        // Set to HEAD revision. '' is cast to null when searching for the tag.
+        $this->changelog->setFromTag('');
+        $this->assertSame('', $this->getPrivateProperty($this->changelog, 'fromTag'));
 
         // Test removing tag value.
-        $changeLog->setFromTag();
-        $this->assertNull($this->getPrivateProperty($changeLog, 'fromTag'));
+        $this->changelog->setFromTag();
+        $this->assertNull($this->getPrivateProperty($this->changelog, 'fromTag'));
 
         // Test exception.
         $this->expectException(\OutOfBoundsException::class);
-        $changeLog->setFromTag('DoesNotExist');
+        $this->changelog->setFromTag('DoesNotExist');
     }
 
-    public function testProcessCommitData()
+    /**
+     * Test the processing of the commit data.
+     *
+     * @return void
+     * @throws \ReflectionException If class reflection fails.
+     */
+    public function testProcessCommitData(): void
     {
-        $changeLog = new ReflectionClass('DigiLive\GitChangelog\GitChangelog');
-        $method    = $changeLog->getMethod('processCommitData');
-        $method->setAccessible(true);
-
-        $changeLog = new GitChangelog();
-        $changeLog->setLabels('C', 'D', 'F');
-
+        // Set dummy commit data.
         $commitData = [
             'A' => [
                 'date'   => 'B',
@@ -256,147 +296,220 @@ class GitChangelogTest extends TestCase
                 'hashes' => [0 => 'G', 1 => 'H', 2 => 'I', 3 => 'J', 4 => 'K'],
             ],
         ];
-        $this->setPrivateProperty($changeLog, 'commitData', $commitData);
-        $commitData = [
+
+        $this->setPrivateProperty($this->changelog, 'commitData', $commitData);
+
+        // Set labels to process.
+        $this->changelog->setLabels('C', 'D', 'F');
+        // Define expected data after processing.
+        $processedData = [
             'A' => [
                 'date'   => 'B',
                 'titles' => [0 => 'C', 1 => 'D', 4 => 'F'],
                 'hashes' => [0 => ['G', 'I'], 1 => ['H'], 4 => ['K']],
             ],
         ];
-        $method->invokeArgs($changeLog, []);
 
-        $this->assertEquals($commitData, $this->getPrivateProperty($changeLog, 'commitData'));
+        // Start processing.
+        $processCommitData = $this->getPrivateMethod($this->changelog, 'processCommitData');
+        $processCommitData->invokeArgs($this->changelog, []);
+
+        $this->assertSame($processedData, $this->getPrivateProperty($this->changelog, 'commitData'));
     }
 
-    public function testAddLabel()
+    /**
+     * Test adding a label.
+     *
+     * Tested against:
+     * - Multiple parameters.
+     * - One unpacked array parameter.
+     *
+     * @return void
+     * @throws \ReflectionException If property GitChangelog::$labels doesn't exist.
+     */
+    public function testAddLabel(): void
     {
-        $changeLog = new GitChangelog();
-
-        $defaultLabels  = $this->getPrivateProperty($changeLog, 'labels');
+        // Get default labels.
+        $defaultLabels  = $this->getPrivateProperty($this->changelog, 'labels');
         $expectedLabels = array_merge($defaultLabels, ['label1', 'label2']);
 
         // Test with string parameters.
-        $changeLog->addLabel('label1', 'label2');
-        $this->assertEquals($expectedLabels, $this->getPrivateProperty($changeLog, 'labels'));
+        $this->changelog->addLabel('label1', 'label2');
+        $this->assertEquals($expectedLabels, $this->getPrivateProperty($this->changelog, 'labels'));
 
         // Test with array parameter.
-        $changeLog->addLabel('label1', 'label2');
-        $this->assertEquals($expectedLabels, $this->getPrivateProperty($changeLog, 'labels'));
+        $labels = ['label1', 'label2'];
+        $this->changelog->addLabel(...$labels);
+        $this->assertEquals($expectedLabels, $this->getPrivateProperty($this->changelog, 'labels'));
     }
 
-    public function testSetToTag()
+    /**
+     * Test setting the to-tag property.
+     *
+     * Tested against:
+     * - A valid value.
+     * - No value.
+     * - An invalid value.
+     *
+     * @return void
+     * @throws \ReflectionException If property GitChangelog::$toTag doesn't exist.
+     */
+    public function testSetToTag(): void
     {
-        $changeLog = new GitChangelog();
-
         // Test setting tag value.
-        $changeLog->setToTag('');
-        $this->assertEquals('', $this->getPrivateProperty($changeLog, 'toTag'));
+        $this->changelog->setToTag('');
+        $this->assertEquals('', $this->getPrivateProperty($this->changelog, 'toTag'));
 
         // Test removing tag value.
-        $changeLog->setToTag();
-        $this->assertSame('', $this->getPrivateProperty($changeLog, 'toTag'));
+        $this->changelog->setToTag();
+        $this->assertSame('', $this->getPrivateProperty($this->changelog, 'toTag'));
 
         // Test exception.
         $this->expectException(\OutOfBoundsException::class);
-        $changeLog->setToTag('DoesNotExist');
+        $this->changelog->setToTag('DoesNotExist');
     }
 
-    public function testRemoveLabel()
+    /**
+     * Test removing a label.
+     *
+     * Tested against:
+     * - Multiple parameters.
+     * - One unpacked array parameter.
+     *
+     * @return void
+     * @throws \ReflectionException If property GitChangelog::$labels doesn't exist.
+     */
+    public function testRemoveLabel(): void
     {
-        $changeLog = new GitChangelog();
-        $labels    = ['Add', 'Cut', 'Fix', 'Bump'];
-
-        $this->setPrivateProperty($changeLog, 'labels', $labels);
+        // Set test labels.
+        $labels = ['Add', 'Cut', 'Fix', 'Bump'];
+        $this->setPrivateProperty($this->changelog, 'labels', $labels);
 
         // Test with array parameter.
-        $changeLog->removeLabel(...$labels);
-        $this->assertEquals([], $this->getPrivateProperty($changeLog, 'labels'));
+        $this->changelog->removeLabel(...$labels);
+        $this->assertEquals([], $this->getPrivateProperty($this->changelog, 'labels'));
 
         // Test with string parameters.
-        $changeLog->addLabel('newLabel1', 'newLabel2', 'newLabel3');
-        $changeLog->removeLabel('newLabel1', 'newLabel2', 'NotExisting');
-        $this->assertEquals(['newLabel3'], $this->getPrivateProperty($changeLog, 'labels'));
+        $this->changelog->addLabel('newLabel1', 'newLabel2', 'newLabel3');
+        $this->changelog->removeLabel('newLabel1', 'newLabel2', 'NotExisting');
+        $this->assertEquals(['newLabel3'], $this->getPrivateProperty($this->changelog, 'labels'));
     }
 
-    public function testSave()
+    /**
+     * Test saving the changelog to a file.
+     *
+     * @return void
+     * @throws \DigiLive\GitChangelog\GitChangelogException When writing of the file fails.
+     * @throws \ReflectionException If property GitChangelog::$changelog doesn't exist.
+     */
+    public function testSave(): void
     {
-        $changeLog    = new GitChangelog();
+        // Set up test values.
         $saveFilePath = vfsStream::url('testFolder/changelog.md');
         $dummyContent = 'Dummy Content';
-        $this->setPrivateProperty($changeLog, 'changelog', $dummyContent);
+        $this->setPrivateProperty($this->changelog, 'changelog', $dummyContent);
 
         // Test without base file.
-        $changeLog->save($saveFilePath);
+        $this->changelog->save($saveFilePath);
         $this->assertFileExists($saveFilePath);
         $fileContent = file_get_contents($saveFilePath);
         $this->assertEquals($dummyContent, $fileContent);
-
 
         // Test with base file.
         $baseFilePath    = vfsStream::url('testFolder/baseLog.md');
         $baseFileContent = file_get_contents($baseFilePath);
 
-        $changeLog->setBaseContent($baseFilePath);
-        $changeLog->save($saveFilePath);
+        $this->changelog->setBaseContent($baseFilePath);
+        $this->changelog->save($saveFilePath);
         $fileContent = file_get_contents($saveFilePath);
         $this->assertEquals($dummyContent . $baseFileContent, $fileContent);
     }
 
-    public function testSaveThrowsExceptionOnWriteableCheck()
+    /**
+     * Test if saving the changelog throws an exception when writing to a non-existing file.
+     *
+     * @return void
+     */
+    public function testSaveThrowsExceptionOnNonExistingFile(): void
     {
-        $changeLog = new GitChangelog();
-
         $this->expectException(GitChangelogException::class);
-        $changeLog->save('nonExistingPath/fileName');
+        $this->changelog->save('nonExistingPath/fileName');
     }
 
-    public function testSaveThrowsExceptionOnWrite()
+    /**
+     * Test if saving the changelog throws an exception when writing to a non-writable file.
+     *
+     * @return void
+     */
+    public function testSaveThrowsExceptionOnNonWritableFile(): void
     {
-        $changeLog = new GitChangelog();
-        $filePath  = vfsStream::url('testFolder/changelog.md');
+        $filePath = vfsStream::url('testFolder/changelog.md');
 
         // Create a file and remove any permission it has.
-        $changeLog->save($filePath);
+        $this->changelog->save($filePath);
         chmod($filePath, 0000);
 
         $this->expectException(GitChangelogException::class);
-        $changeLog->save(vfsStream::url('testFolder/changelog.md'));
+        $this->changelog->save(vfsStream::url('testFolder/changelog.md'));
     }
 
-    public function testSetOptions()
+    /**
+     * Test setting options.
+     *
+     * Tested against:
+     * - A single option.
+     * - Multiple options.
+     *
+     * @return void
+     * @throws \OutOfBoundsException If the option you're trying to set is invalid.
+     * @throws \RangeException When setting option 'headTag' to an invalid value.
+     * @throws \DigiLive\GitChangelog\GitChangelogException If fetching the repository tags fails.
+     * @throws \ReflectionException If property GitChangelog::$options doesn't exist.
+     */
+    public function testSetOptions(): void
     {
-        $changeLog = new GitChangelog();
+        // Set single option.
+        $this->changelog->setOptions('logHeader', 'Test');
+        $this->assertEquals('Test', $this->getPrivateProperty($this->changelog, 'options')['logHeader']);
 
         // Set multiple options at once.
-        $changeLog->setOptions(
+        $this->changelog->setOptions(
             [
                 'logHeader'   => 'Test1',
                 'headTagName' => 'Test2',
             ]
         );
-        $this->assertEquals('Test1', $this->getPrivateProperty($changeLog, 'options')['logHeader']);
-        $this->assertEquals('Test2', $this->getPrivateProperty($changeLog, 'options')['headTagName']);
-
-        // Set single option.
-        $changeLog->setOptions('logHeader', 'Test');
-        $this->assertEquals('Test', $this->getPrivateProperty($changeLog, 'options')['logHeader']);
+        $this->assertEquals('Test1', $this->getPrivateProperty($this->changelog, 'options')['logHeader']);
+        $this->assertEquals('Test2', $this->getPrivateProperty($this->changelog, 'options')['headTagName']);
     }
 
-    public function testSetOptionsThrowsExceptionOnInvalidOption()
+    /**
+     * Test if setting an invalid option fails.
+     *
+     * @return void
+     * @throws \RangeException When setting option 'headTag' to an invalid value.
+     * @throws \DigiLive\GitChangelog\GitChangelogException If fetching the repository tags fails.
+     */
+    public function testSetOptionsThrowsExceptionOnInvalidOption(): void
     {
-        $changeLog = new GitChangelog();
-
         $this->expectException(\OutOfBoundsException::class);
-        $changeLog->setOptions('NotExistingOption', 'Test');
+        $this->changelog->setOptions('NotExistingOption', 'Test');
     }
 
-    public function testSetOptionsThrowsExceptionOnInvalidHeadTagNameValue()
+    /**
+     * Test if setting an invalid tag name for the head revision fails.
+     *
+     * @return void
+     * @throws \OutOfBoundsException If the option you're trying to set is invalid.
+     * @throws \DigiLive\GitChangelog\GitChangelogException If fetching the repository tags fails.
+     * @throws \ReflectionException If property GitChangelog::$gitTags doesn't exist.
+     */
+    public function testSetOptionsThrowsExceptionOnInvalidHeadTagNameValue(): void
     {
-        $changeLog = new GitChangelog();
-        $this->setPrivateProperty($changeLog, 'gitTags', ['Test']);
+        // Set the pre-fetched tags to test values.
+        $this->setPrivateProperty($this->changelog, 'gitTags', ['Test']);
 
         $this->expectException(\RangeException::class);
-        $changeLog->setOptions('headTagName', 'Test');
+        $this->changelog->setOptions('headTagName', 'Test');
     }
 }
