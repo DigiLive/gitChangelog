@@ -1,13 +1,15 @@
 # Changelog
 
-## Next Release (Soon)
+## v2.0.0-rc.1 (2022-03-26)
 
-* Add Cut Fix code for next version. ([a35121a][66])
+* Add Cut Fix code for next version. ([a35121a][67])
 
-* Add case insensitivity for sorting order ([251c38c][65])
+* Add case insensitivity for sorting order ([251c38c][66])
 
 * Add reversed indexing of reference links for descending tag order
-([#18][64]) ([e052365][63])
+([#18][65]) ([e052365][64])
+
+* Fix method visibility ([cde47cb][63])
 
 * Fix npm script parameters ([c76bce3][62])
 
@@ -174,7 +176,8 @@
 [60]:https://github.com/DigiLive/gitChangelog/commit/032568e
 [61]:https://github.com/DigiLive/gitChangelog/commit/0eb21f6
 [62]:https://github.com/DigiLive/gitChangelog/commit/c76bce3
-[63]:https://github.com/DigiLive/gitChangelog/commit/e052365
-[64]:https://github.com/DigiLive/gitChangelog/issue/18
-[65]:https://github.com/DigiLive/gitChangelog/commit/251c38c
-[66]:https://github.com/DigiLive/gitChangelog/commit/a35121a
+[63]:https://github.com/DigiLive/gitChangelog/commit/cde47cb
+[64]:https://github.com/DigiLive/gitChangelog/commit/e052365
+[65]:https://github.com/DigiLive/gitChangelog/issue/18
+[66]:https://github.com/DigiLive/gitChangelog/commit/251c38c
+[67]:https://github.com/DigiLive/gitChangelog/commit/a35121a
