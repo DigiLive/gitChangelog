@@ -45,7 +45,7 @@ use DigiLive\GitChangelog\GitChangelogException;
 trait RendererTrait
 {
     /**
-     * @var ?string[] Urls of the webinterface of the remote repository.
+     * @var ?string[] Urls of the provider's repository.
      *                <pre>
      *                'commit'       Url to the commit view.
      *                               If set, hashes of a commit title are converted into links which refer to the
@@ -53,11 +53,11 @@ trait RendererTrait
      *                               {commit} is replaced by the hash id of the commit.
      *                'issue'        Url to the issue tracker.
      *                               If set, issue references in a commit title are converted into links which refer to
-     *                               the corresponding issue at the web interface.
+     *                               the corresponding issue at the tracker.
      *                               {issue} is replaced by the issue number.
      *                'mergeRequest' Url to the merge-request view (Also known as pull request).
      *                               If set, merge-request references in a commit title are converted into links
-     *                               which refer to the corresponding merge-request at the web interface..
+     *                               which refer to the corresponding merge-request at the web interface.
      *                               {mergeRequest} is replaced by the merge/pull request id.
      *                </pre>
      */
@@ -71,11 +71,10 @@ trait RendererTrait
      * @var string[] Formats of the tags and commit titles in the changelog.
      *               <pre>
      *               'tag'   Format of tag strings.
-     *                       {tag} is replaced by the tags of the git log, {date} is replaced by the corresponding tag
-     *                       date.
+     *                       {tag} is replaced by the repository tag, {date} is replaced by the corresponding tag date.
      *               'title' Format of commit titles.
-     *                       {title} is replaced by commit title of the git log, {hashes} is replaced by the
-     *                       corresponding commit hashes.
+     *                       {title} is replaced by repository commit-title, {hashes} is replaced by the corresponding
+     *                       commit hashes.
      *               </pre>
      */
     private $formats = [
@@ -88,8 +87,8 @@ trait RendererTrait
      *               If set, commit titles are searched for the defined patterns and converted into links.
      *               <pre>
      *               Type           Description
-     *               'issue'        Pattern of an issue.
-     *               'mergeRequest' Pattern of a merge request (also known as pull request).
+     *               'issue'        Pattern of an issue string.
+     *               'mergeRequest' Pattern of a merge request string (also known as pull request).
      *               </pre>
      *
      */

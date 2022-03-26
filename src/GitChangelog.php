@@ -406,7 +406,7 @@ class GitChangelog
      *
      * Optionally the generated changelog is appended with the content of property GitChangelog::$baseContent.
      *
-     * @param   bool  $append  Set to true to append the changelog with base content.
+     * @param   bool  $append  Set to true to append the changelog by base content.
      *
      * @return string The generated changelog, optionally followed by base content.
      * @see GitChangelog::$baseContent
