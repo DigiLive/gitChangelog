@@ -180,7 +180,7 @@ class MarkDown extends GitChangelog implements RendererInterface
      * @see GitChangelog::$commitUrl
      * @see GitChangelog::$links
      */
-    protected function formatHashes(array $hashes): string
+    private function formatHashes(array $hashes): string
     {
         if (!$this->options['addHashes']) {
             return '';

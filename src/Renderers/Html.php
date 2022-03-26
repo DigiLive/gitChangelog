@@ -141,7 +141,7 @@ class Html extends GitChangelog implements RendererInterface
      * @return string Formatted hash string.
      * @see GitChangelog::$commitUrl
      */
-    protected function formatHashes(array $hashes): string
+    private function formatHashes(array $hashes): string
     {
         if (!$this->options['addHashes']) {
             return '';
