@@ -1,0 +1,7 @@
+---
+engines:
+  phpcs:
+    php_version: 7.3
+exclude_paths:
+  - ".github/**"
+  - "tests/**"

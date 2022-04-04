@@ -1,0 +1,48 @@
+{
+    "name": "digilive/git-changelog",
+    "description": "Generate a changelog from git commits of the local repository",
+    "keywords": [
+        "php",
+        "git",
+        "changelog",
+        "generator"
+    ],
+    "readme": "README.md",
+    "type": "library",
+    "minimum-stability": "stable",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "DigiLive",
+            "email": "info@digilive.nl",
+            "homepage": "https://digilive.nl"
+        },
+        {
+            "name": "Mario",
+            "email": "leet31337@web.de"
+        }
+    ],
+    "support": {
+        "wiki": "https://github.com/DigiLive/gitChangelog/wiki",
+        "issues": "https://github.com/DigiLive/gitChangelog/issues"
+    },
+    "require": {
+        "php": "^7.3 || ^8.0",
+        "ext-mbstring": "*",
+        "symfony/process": "^5"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9",
+        "mikey179/vfsstream": "^1.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "DigiLive\\GitChangelog\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DigiLive\\GitChangelog\\Tests\\": "tests/"
+        }
+    }
+}
