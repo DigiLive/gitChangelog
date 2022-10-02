@@ -238,7 +238,7 @@ class RepoHandler
                 continue;
             }
 
-            $commitData[$tag]['date']     = $line[0];
+            $commitData[$tag]['date']     = $commitData[$tag]['date'] ?? $line[0];
             $commitData[$tag]['titles'][] = $line[1];
             $commitData[$tag]['hashes'][] = $line[2];
         }
