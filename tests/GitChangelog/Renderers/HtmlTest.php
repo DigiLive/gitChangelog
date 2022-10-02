@@ -35,7 +35,7 @@
 
 namespace DigiLive\GitChangelog\Tests\GitChangelog\Renderers;
 
-use DigiLive\GitChangelog\GitChangelog\Renderers\Html;
+use DigiLive\GitChangelog\Renderers\Html;
 use DigiLive\GitChangelog\Tests\ReflectionTrait;
 use PHPUnit\Framework\TestCase;
 
@@ -47,7 +47,7 @@ class HtmlTest extends TestCase
     use ReflectionTrait;
 
     /**
-     * @var \DigiLive\GitChangelog\GitChangelog\Renderers\Html The object that will be tested against.
+     * @var \DigiLive\GitChangelog\Renderers\Html The object that will be tested against.
      */
     private $changelog;
 
@@ -68,7 +68,7 @@ class HtmlTest extends TestCase
      *
      * @throws \ReflectionException When setting a private property fails.
      * @throws \DigiLive\GitChangelog\RepoHandler\RepoHandlerException If fetching the repository tags fails.
-     * @throws \DigiLive\GitChangelog\GitChangelog\GitChangelogException If the pattern doesn't contain exactly one
+     * @throws \DigiLive\GitChangelog\GitChangelogException If the pattern doesn't contain exactly one
      *                                                                   capturing group.
      */
     public function testBuildAscendingTitleOrder()

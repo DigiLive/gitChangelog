@@ -35,7 +35,7 @@
 
 declare(strict_types=1);
 
-namespace DigiLive\GitChangelog\GitChangelog;
+namespace DigiLive\GitChangelog;
 
 use DigiLive\GitChangelog\RepoHandler\RepoHandler;
 use DigiLive\GitChangelog\Utilities\ArrayUtils;
@@ -76,7 +76,7 @@ class GitChangelog
 {
     /**
      * @var string The generated changelog.
-     * @see \DigiLive\GitChangelog\GitChangelog\Renderers\RendererInterface::build()
+     * @see \DigiLive\GitChangelog\Renderers\RendererInterface::build()
      */
     protected $changelog;
     /**

@@ -35,9 +35,9 @@
 
 declare(strict_types=1);
 
-namespace DigiLive\GitChangelog\GitChangelog\Renderers;
+namespace DigiLive\GitChangelog\Renderers;
 
-use DigiLive\GitChangelog\GitChangelog\GitChangelogException;
+use DigiLive\GitChangelog\GitChangelogException;
 
 /**
  * Common methods and properties of the changelog renderers.
@@ -177,7 +177,7 @@ trait RendererTrait
      * @param   string   $type     'issue' or 'mergeRequest'.
      * @param   ?string  $pattern  Pattern of an issue or merge request.
      *
-     * @throws \DigiLive\GitChangelog\GitChangelog\GitChangelogException If the pattern doesn't contain exactly one
+     * @throws \DigiLive\GitChangelog\GitChangelogException If the pattern doesn't contain exactly one
      *                                                                   capturing group.
      * @see RendererTrait::$patterns
      */

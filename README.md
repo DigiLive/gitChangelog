@@ -94,7 +94,7 @@ from [GitHub](https://github.com/DigiLive/gitChangelog/releases).
 ```php
 <?php
 
-use DigiLive\GitChangelog\GitChangelog\Renderers\MarkDown;
+use DigiLive\GitChangelog\Renderers\MarkDown;
  
 // Use composer's auto loader.
 $requiredFile = 'Path/To/vendor/autoload.php';

@@ -35,9 +35,9 @@
 
 declare(strict_types=1);
 
-namespace DigiLive\GitChangelog\GitChangelog\Renderers;
+namespace DigiLive\GitChangelog\Renderers;
 
-use DigiLive\GitChangelog\GitChangelog\GitChangelog;
+use DigiLive\GitChangelog\GitChangelog;
 use DigiLive\GitChangelog\Utilities\ArrayUtils;
 
 /**

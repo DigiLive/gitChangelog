@@ -37,6 +37,7 @@ declare(strict_types=1);
 
 namespace DigiLive\GitChangelog\RepoHandler;
 
+use DigiLive\GitChangelog\GitChangelog;
 use DigiLive\GitChangelog\Utilities\ArrayUtils;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\ExecutableFinder;

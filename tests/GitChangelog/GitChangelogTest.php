@@ -37,7 +37,7 @@ declare(strict_types=1);
 
 namespace DigiLive\GitChangelog\Tests\GitChangelog;
 
-use DigiLive\GitChangelog\GitChangelog\GitChangelog;
+use DigiLive\GitChangelog\GitChangelog;
 use DigiLive\GitChangelog\RepoHandler\RepoHandler;
 use DigiLive\GitChangelog\Tests\ReflectionTrait;
 use org\bovigo\vfs\vfsStream;
@@ -53,7 +53,7 @@ class GitChangelogTest extends TestCase
     use ReflectionTrait;
 
     /**
-     * @var \DigiLive\GitChangelog\GitChangelog\GitChangelog The object that will be tested against.
+     * @var \DigiLive\GitChangelog\GitChangelog The object that will be tested against.
      */
     private $changelog;
 

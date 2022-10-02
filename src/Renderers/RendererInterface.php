@@ -35,7 +35,7 @@
 
 declare(strict_types=1);
 
-namespace DigiLive\GitChangelog\GitChangelog\Renderers;
+namespace DigiLive\GitChangelog\Renderers;
 
 /**
  * Interface RendererInterface.
@@ -53,7 +53,7 @@ interface RendererInterface
      * The purpose of this method is to generate a changelog for GitChangelog.
      * This generated changelog is expected be stored into \DigiLive\GitChangelog\GitChangelog::$changelog
      *
-     * @see \DigiLive\GitChangelog\GitChangelog\GitChangelog::$changelog
+     * @see \DigiLive\GitChangelog\GitChangelog::$changelog
      */
     public function build(): void;
 }

@@ -35,7 +35,7 @@
 
 declare(strict_types=1);
 
-namespace DigiLive\GitChangelog\GitChangelog;
+namespace DigiLive\GitChangelog;
 
 /**
  * Exception class.

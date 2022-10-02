@@ -35,9 +35,9 @@
 
 declare(strict_types=1);
 
-namespace DigiLive\GitChangelog\GitChangelog\Renderers;
+namespace DigiLive\GitChangelog\Renderers;
 
-use DigiLive\GitChangelog\GitChangelog\GitChangelog;
+use DigiLive\GitChangelog\GitChangelog;
 use DigiLive\GitChangelog\Utilities\ArrayUtils;
 
 /**
@@ -139,7 +139,7 @@ class Html extends GitChangelog implements RendererInterface
      * @param   array  $hashes  Hashes to format
      *
      * @return string Formatted hash string.
-     * @see GitChangelog::$commitUrl
+     * @see \DigiLive\GitChangelog\GitChangelog::$commitUrl
      */
     private function formatHashes(array $hashes): string
     {

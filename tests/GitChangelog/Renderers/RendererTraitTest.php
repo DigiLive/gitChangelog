@@ -37,8 +37,8 @@ declare(strict_types=1);
 
 namespace DigiLive\GitChangelog\Tests\GitChangelog\Renderers;
 
-use DigiLive\GitChangelog\GitChangelog\GitChangelogException;
-use DigiLive\GitChangelog\GitChangelog\Renderers\RendererTrait;
+use DigiLive\GitChangelog\GitChangelogException;
+use DigiLive\GitChangelog\Renderers\RendererTrait;
 use DigiLive\GitChangelog\Tests\ReflectionTrait;
 use PHPUnit\Framework\TestCase;
 
